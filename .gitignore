@@ -12,5 +12,5 @@ env/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
-
-# Do not ignore dist/ and uv.lock as requested
+dist/
+uv.lock
