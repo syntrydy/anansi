@@ -1,0 +1,16 @@
+# Standard Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+
+# Project specific
+.env
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Do not ignore dist/ and uv.lock as requested

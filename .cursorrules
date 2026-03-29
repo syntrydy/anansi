@@ -1,0 +1,28 @@
+# Anansi Team Conventions
+
+## Tech Stack
+- Python 3.11+
+- uv for dependency management
+- LangGraph for agent control
+- Streamlit for UI
+- FastMCP for cultural context integration
+- FLUX (Replicate/SiliconFlow) for images
+- Google Cloud TTS for audio
+- Langfuse for observability
+
+## Architecture Rules
+- Use typed interfaces (Pydantic, TypedDict) at all node boundaries.
+- No loose strings passed between nodes.
+- Do not implement any business logic in the view layer.
+- Ensure all states in the graph are clear and observable.
+
+## Code Style
+- Use Ruff for linting and formatting (line-length 88, py311 target).
+- Use Mypy in strict mode for type checking.
+- Document every file, class, and function.
+
+## What NEVER to do
+- No `pip install` commands. Always use `uv`.
+- No `os.getenv` in business logic — use Pydantic BaseSettings in `config.py`.
+- No bare `except Exception:` blocks; always catch specific exceptions.
+- No direct JSON reads in tools; encapsulate data reads within the context repository.

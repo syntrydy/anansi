@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "country": { "type": "string" },
+    "languages": {
+      "type": "object",
+      "properties": {
+        "official": { "type": "string" },
+        "local": { "type": "array", "items": { "type": "string" } },
+        "tts_code": { "type": "string" }
+      }
+    },
+    "names": {
+      "type": "object",
+      "properties": {
+        "male": { "type": "array", "items": { "type": "string" } },
+        "female": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "places": {
+      "type": "object",
+      "properties": {
+        "cities": { "type": "array", "items": { "type": "string" } },
+        "rivers": { "type": "array", "items": { "type": "string" } },
+        "landmarks": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "culture": {
+      "type": "object",
+      "properties": {
+        "food": { "type": "array", "items": { "type": "string" } },
+        "clothing": { "type": "array", "items": { "type": "string" } },
+        "housing": { "type": "array", "items": { "type": "string" } },
+        "transport": { "type": "array", "items": { "type": "string" } },
+        "animals": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "art_style_cues": { "type": "string" },
+    "avoids": { "type": "array", "items": { "type": "string" } }
+  }
+}

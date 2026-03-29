@@ -1,0 +1,26 @@
+{
+  "country": "",
+  "languages": {
+    "official": "",
+    "local": [],
+    "tts_code": ""
+  },
+  "names": {
+    "male": [],
+    "female": []
+  },
+  "places": {
+    "cities": [],
+    "rivers": [],
+    "landmarks": []
+  },
+  "culture": {
+    "food": [],
+    "clothing": [],
+    "housing": [],
+    "transport": [],
+    "animals": []
+  },
+  "art_style_cues": "",
+  "avoids": []
+}
