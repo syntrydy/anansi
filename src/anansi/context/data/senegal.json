@@ -1,26 +1,50 @@
 {
-  "country": "",
+  "country": "Senegal",
   "languages": {
-    "official": "",
-    "local": [],
-    "tts_code": ""
+    "official": "French",
+    "local": ["Wolof", "Pulaar", "Serer", "Diola", "Mandinka"],
+    "tts_code": "fr-SN"
   },
   "names": {
-    "male": [],
-    "female": []
+    "male": [
+      "Mamadou", "Ibrahima", "Ousmane", "Cheikh", "Modou",
+      "Assane", "Seydou", "Pape", "Lamine", "Abdoulaye"
+    ],
+    "female": [
+      "Fatou", "Aminata", "Mariama", "Rokhaya", "Ndéye",
+      "Astou", "Khady", "Awa", "Binta", "Sokhna"
+    ]
   },
   "places": {
-    "cities": [],
-    "rivers": [],
-    "landmarks": []
+    "cities": ["Dakar", "Thiès", "Saint-Louis", "Ziguinchor", "Touba", "Kaolack"],
+    "rivers": ["Senegal River", "Casamance River", "Gambia River", "Falémé River"],
+    "landmarks": [
+      "African Renaissance Monument",
+      "Île de Gorée",
+      "Lac Rose (Pink Lake)",
+      "Casamance Forest",
+      "Saloum Delta",
+      "Great Mosque of Touba"
+    ]
   },
   "culture": {
-    "food": [],
-    "clothing": [],
-    "housing": [],
-    "transport": [],
-    "animals": []
+    "food": ["thiéboudienne (rice and fish)", "yassa poulet", "mafé", "thiakry", "accara", "benachin", "caldou"],
+    "clothing": ["boubou", "bazin fabric", "seersucker grand boubou", "kaftan", "tiesserands woven strip cloth"],
+    "housing": ["painted concrete house", "thatched roof hut", "clay compound", "cement block home", "terrace house"],
+    "transport": ["car rapide (painted bus)", "sept-place (bush taxi)", "pirogue fishing boat", "charrette (donkey cart)", "bicycle"],
+    "animals": ["warthog", "hyena", "pelican", "sea turtle", "African manatee", "Nile monitor", "green monkey"]
   },
-  "art_style_cues": "",
-  "avoids": []
+  "art_style_cues": "Sahelian landscape, golden sandy soil, iconic baobab trees with thick trunks, colourful painted buses, Atlantic coastline with fishing pirogues, vibrant boubou fabrics in blue and yellow",
+  "avoids": [
+    "snow",
+    "oak trees",
+    "US dollars",
+    "subway trains",
+    "pine forests",
+    "igloos",
+    "autumn leaves",
+    "Alpine mountains",
+    "cherry blossom",
+    "North American wildlife such as moose or bear"
+  ]
 }

@@ -1,26 +1,50 @@
 {
-  "country": "",
+  "country": "Cameroon",
   "languages": {
-    "official": "",
-    "local": [],
-    "tts_code": ""
+    "official": "French",
+    "local": ["Ewondo", "Fulfulde", "Bamileke", "Basaa", "English"],
+    "tts_code": "fr-CM"
   },
   "names": {
-    "male": [],
-    "female": []
+    "male": [
+      "Jean-Pierre", "Aristide", "Blaise", "Armand", "Rodrigue",
+      "Mohamadou", "Patrice", "Bertrand", "Thierry", "Désiré"
+    ],
+    "female": [
+      "Marie-Claire", "Solange", "Alphonsine", "Cécile", "Flore",
+      "Aïssatou", "Nadège", "Véronique", "Brigitte", "Claudine"
+    ]
   },
   "places": {
-    "cities": [],
-    "rivers": [],
-    "landmarks": []
+    "cities": ["Yaoundé", "Douala", "Garoua", "Bafoussam", "Bamenda", "Maroua"],
+    "rivers": ["Wouri River", "Sanaga River", "Bénoué River", "Nyong River"],
+    "landmarks": [
+      "Mount Cameroon",
+      "Waza National Park",
+      "Dja Faunal Reserve",
+      "Limbe Botanical Garden",
+      "Kribi Waterfalls",
+      "Lake Nyos"
+    ]
   },
   "culture": {
-    "food": [],
-    "clothing": [],
-    "housing": [],
-    "transport": [],
-    "animals": []
+    "food": ["ndolé", "eru", "koki", "bobolo", "achu soup", "sanga", "okok", "miondo"],
+    "clothing": ["toghu (Bamileke festive cloth)", "ankara print", "boubou", "embroidered kaftan", "raffia hat"],
+    "housing": ["cement block house", "thatched-roof hut", "adobe compound", "raised timber house", "stilted river house"],
+    "transport": ["moto-taxi", "bush taxi", "pirogue on rivers", "cargo lorry", "bicycle"],
+    "animals": ["western lowland gorilla", "forest elephant", "mandrill", "chimpanzee", "African grey parrot", "pangolin"]
   },
-  "art_style_cues": "",
-  "avoids": []
+  "art_style_cues": "Central African equatorial forest, misty volcanic highlands of the West Region, Atlantic coastline near Douala, vibrant toghu fabric in black and multicolour embroidery, red laterite mountain roads, dense green rainforest canopy",
+  "avoids": [
+    "snow in lowland areas",
+    "oak trees",
+    "US dollars",
+    "subway trains",
+    "pine forests",
+    "igloos",
+    "Arctic wildlife",
+    "Western fast food logos",
+    "maple trees",
+    "Alpine scenery"
+  ]
 }

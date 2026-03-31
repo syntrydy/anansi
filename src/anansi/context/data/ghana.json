@@ -1,26 +1,50 @@
 {
-  "country": "",
+  "country": "Ghana",
   "languages": {
-    "official": "",
-    "local": [],
-    "tts_code": ""
+    "official": "English",
+    "local": ["Twi", "Ga", "Ewe", "Dagbani", "Hausa"],
+    "tts_code": "en-GH"
   },
   "names": {
-    "male": [],
-    "female": []
+    "male": [
+      "Kwame", "Kofi", "Kwabena", "Kojo", "Kweku",
+      "Yaw", "Akwasi", "Nana", "Ebo", "Fiifi"
+    ],
+    "female": [
+      "Abena", "Akua", "Ama", "Afia", "Adwoa",
+      "Efua", "Akosua", "Araba", "Yaa", "Maame"
+    ]
   },
   "places": {
-    "cities": [],
-    "rivers": [],
-    "landmarks": []
+    "cities": ["Accra", "Kumasi", "Tamale", "Takoradi", "Cape Coast", "Sunyani"],
+    "rivers": ["Volta River", "Pra River", "Ankobra River", "Black Volta", "White Volta"],
+    "landmarks": [
+      "Cape Coast Castle",
+      "Lake Volta",
+      "Kakum National Park",
+      "Mole National Park",
+      "Kwame Nkrumah Mausoleum",
+      "Aburi Botanical Gardens"
+    ]
   },
   "culture": {
-    "food": [],
-    "clothing": [],
-    "housing": [],
-    "transport": [],
-    "animals": []
+    "food": ["fufu", "kenkey", "banku", "jollof rice", "kelewele", "waakye", "kontomire stew", "groundnut soup"],
+    "clothing": ["kente cloth", "smock (fugu)", "batakari", "ankara print", "adinkra print fabric"],
+    "housing": ["compound house", "zinc-roof bungalow", "adobe mud house", "concrete block home", "stilt house on the coast"],
+    "transport": ["trotro minibus", "kejetia bus", "okada motorcycle", "cargo truck", "dugout canoe on Volta"],
+    "animals": ["forest elephant", "chimpanzee", "leopard", "mona monkey", "African fish eagle", "nile crocodile"]
   },
-  "art_style_cues": "",
-  "avoids": []
+  "art_style_cues": "West African tropical forest and savanna, red laterite roads, kente weaving patterns in gold and black, Gulf of Guinea coastline with fishing boats, lush green forest canopy in the south, dry harmattan haze in the north",
+  "avoids": [
+    "snow",
+    "oak trees",
+    "US dollars",
+    "subway trains",
+    "pine forests",
+    "igloos",
+    "tundra",
+    "Western fast food logos",
+    "maple trees",
+    "Swiss mountains"
+  ]
 }
