@@ -1,13 +1,7 @@
-"""
-Script models.
-Defines structures for cartoon panel scripts.
-"""
+from pydantic import BaseModel
 
-# from pydantic import BaseModel
-
-class PanelScript:
-    """
-    Model representing the script for a single cartoon panel.
-    """
-    # TODO: Inherit from BaseModel and add fields for caption, dialogue, prompt, etc.
-    pass
+class PanelScript(BaseModel):
+    panel_id: str
+    caption: str
+    dialogue: str
+    prompt: str

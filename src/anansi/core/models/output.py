@@ -1,13 +1,11 @@
-"""
-Output models.
-Defines structures for the final teaching package.
-"""
+from pydantic import BaseModel
+from typing import List
+from anansi.core.models.storyboard import Scene
+from anansi.core.models.audio import GeneratedAudio
+from anansi.core.models.cartoon import GeneratedImage
 
-# from pydantic import BaseModel
-
-class OutputPackage:
-    """
-    Model for the complete, assembled teaching package.
-    """
-    # TODO: Assemble outputs including PDF structure, teacher guide, and panels.
-    pass
+class OutputPackage(BaseModel):
+    scenes: List[Scene]
+    audios: List[GeneratedAudio] = []
+    images: List[GeneratedImage] = []
+    teacher_guide: str
