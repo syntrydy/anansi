@@ -1,10 +1,16 @@
-"""
-Node 5 - Synthesizer.
-"""
+from anansi.core.models.script import PanelScript
+from anansi.core.models.state import AnansiState
 
-def synthesize_output() -> None:
+def synthesize_output(state: AnansiState, panel_scripts: list[PanelScript], images: list[str]) -> dict:
     """
-    Assembles the generated assets into the final teaching package.
+    Node 5 - Synthesizer
+    Assembles all generated assets into a teaching package.
+
+    Returns:
+        dict with keys: 'scripts', 'images', 'teacher_guide'
     """
-    # TODO: Implement PDF creation and guide assembly.
-    pass
+    return {
+        "scripts": [p.dict() for p in panel_scripts],
+        "images": images,
+        "teacher_guide": f"Guide for {state.topic} in {state.language}"
+    }

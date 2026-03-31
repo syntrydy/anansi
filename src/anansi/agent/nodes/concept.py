@@ -1,10 +1,21 @@
-"""
-Node 1 - Concept Analyzer.
-"""
+from anansi.core.models import TeacherInput, Scene, AnansiState
 
-def analyze_concept() -> None:
+def analyze_concept(state: AnansiState) -> list[Scene]:
     """
-    Analyzes the topic and structures it into educational scenes.
+    Node 1 - Concept Analyzer
+    Analyzes the teacher input topic and breaks it into storyboard scenes.
+
+    Args:
+        state: AnansiState containing topic, grade, language, extra context.
+
+    Returns:
+        List of Scene objects.
     """
-    # TODO: Implement logic to break down topic into key concepts.
-    pass
+    scenes = []
+    topics = state.topic.split(",")  # split comma-separated topics
+    for i, concept in enumerate(topics):
+        scenes.append(Scene(
+            panel_number=i + 1,
+            description=f"Illustrate concept: {concept.strip()}"
+        ))
+    return scenes
