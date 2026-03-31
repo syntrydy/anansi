@@ -1,26 +1,50 @@
 {
-  "country": "",
+  "country": "Nigeria",
   "languages": {
-    "official": "",
-    "local": [],
-    "tts_code": ""
+    "official": "English",
+    "local": ["Yoruba", "Hausa", "Igbo", "Fulfulde", "Edo"],
+    "tts_code": "en-NG"
   },
   "names": {
-    "male": [],
-    "female": []
+    "male": [
+      "Chukwuemeka", "Babatunde", "Musa", "Chijioke", "Adewale",
+      "Ibrahim", "Obinna", "Segun", "Usman", "Emeka"
+    ],
+    "female": [
+      "Ngozi", "Fatimah", "Adaeze", "Bimpe", "Chisom",
+      "Hauwa", "Amara", "Yetunde", "Ifunanya", "Zainab"
+    ]
   },
   "places": {
-    "cities": [],
-    "rivers": [],
-    "landmarks": []
+    "cities": ["Lagos", "Abuja", "Kano", "Ibadan", "Port Harcourt", "Enugu", "Kaduna"],
+    "rivers": ["Niger River", "Benue River", "Cross River", "Ogun River"],
+    "landmarks": [
+      "Zuma Rock",
+      "Aso Rock",
+      "Yankari National Park",
+      "Obudu Plateau",
+      "Niger Delta",
+      "Benin City Walls"
+    ]
   },
   "culture": {
-    "food": [],
-    "clothing": [],
-    "housing": [],
-    "transport": [],
-    "animals": []
+    "food": ["jollof rice", "egusi soup", "suya", "pounded yam", "akara", "eba", "moin moin", "tuwo shinkafa"],
+    "clothing": ["agbada", "iro and buba", "ankara print", "babariga", "gele headtie", "kaftan"],
+    "housing": ["zinc-roof bungalow", "mud compound house", "face-me-I-face-you", "clay hut", "storey building"],
+    "transport": ["danfo bus", "okada motorcycle", "keke napep tricycle", "dugout canoe", "commercial bus"],
+    "animals": ["elephant", "hippopotamus", "crocodile", "African grey parrot", "pangolin", "red river hog"]
   },
-  "art_style_cues": "",
-  "avoids": []
+  "art_style_cues": "West African urban and rural mix, red clay soil in north, lush green forest in south, colourful ankara fabric, corrugated-zinc rooftops, dense tropical vegetation, vibrant market scenes",
+  "avoids": [
+    "snow",
+    "oak trees",
+    "US dollars",
+    "subway trains",
+    "pine forests",
+    "igloos",
+    "Western fast food logos",
+    "tundra landscapes",
+    "cherry blossom trees",
+    "Swiss chalets"
+  ]
 }

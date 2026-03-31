@@ -1,26 +1,50 @@
 {
-  "country": "",
+  "country": "Kenya",
   "languages": {
-    "official": "",
-    "local": [],
-    "tts_code": ""
+    "official": "English",
+    "local": ["Swahili", "Kikuyu", "Luo", "Luhya", "Kamba"],
+    "tts_code": "sw-KE"
   },
   "names": {
-    "male": [],
-    "female": []
+    "male": [
+      "Kamau", "Otieno", "Mwangi", "Ochieng", "Njoroge",
+      "Kipchoge", "Omondi", "Waweru", "Mutua", "Barasa"
+    ],
+    "female": [
+      "Achieng", "Wanjiru", "Adhiambo", "Wambui", "Nyambura",
+      "Akinyi", "Wairimu", "Awino", "Njeri", "Mumbua"
+    ]
   },
   "places": {
-    "cities": [],
-    "rivers": [],
-    "landmarks": []
+    "cities": ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Thika"],
+    "rivers": ["Tana River", "Athi River", "Mara River", "Ewaso Ng'iro"],
+    "landmarks": [
+      "Mount Kenya",
+      "Maasai Mara",
+      "Lake Victoria",
+      "Amboseli National Park",
+      "Tsavo National Park",
+      "Great Rift Valley"
+    ]
   },
   "culture": {
-    "food": [],
-    "clothing": [],
-    "housing": [],
-    "transport": [],
-    "animals": []
+    "food": ["ugali", "sukuma wiki", "nyama choma", "chapati", "githeri", "mandazi", "pilau"],
+    "clothing": ["kanga", "kikoi", "kitenge", "shuka (Maasai blanket)", "kofia (cap)"],
+    "housing": ["mabati roof house", "mud-walled home", "nyumba ya udongo", "stone house", "boma"],
+    "transport": ["matatu", "boda boda", "tuk-tuk", "dhow (coast)", "bicycle"],
+    "animals": ["zebra", "giraffe", "elephant", "lion", "flamingo", "impala", "zebu cattle"]
   },
-  "art_style_cues": "",
-  "avoids": []
+  "art_style_cues": "East African savanna setting, red laterite soil, acacia trees, blue sky with cumulus clouds, distant escarpment ridge, colourful kanga fabric patterns",
+  "avoids": [
+    "snow",
+    "oak trees",
+    "US dollars",
+    "subway trains",
+    "pine forests",
+    "Western fast food restaurants",
+    "polar bears",
+    "reindeer",
+    "maple leaves",
+    "skyscrapers with English signage"
+  ]
 }
