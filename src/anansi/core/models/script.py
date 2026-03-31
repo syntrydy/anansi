@@ -5,3 +5,4 @@ class PanelScript(BaseModel):
     caption: str
     dialogue: str
     prompt: str
+    narration: str
