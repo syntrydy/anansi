@@ -7,6 +7,7 @@ from typing import List
 import asyncio
 import logging
 import os
+import time
 from pathlib import Path
 
 from google.cloud import texttospeech
@@ -40,7 +41,7 @@ async def synthesize_speech(text: str, language_code: str) -> bytes:
     """
     loop = asyncio.get_running_loop()
 
-    def sync_call():
+    def sync_call() -> bytes:
         client = get_tts_client()
         input_text = texttospeech.SynthesisInput(text=text)
         voice = texttospeech.VoiceSelectionParams(
@@ -57,7 +58,7 @@ async def synthesize_speech(text: str, language_code: str) -> bytes:
             except GoogleAPIError as e:
                 logger.warning(f"TTS attempt {attempt+1} failed for language {language_code}: {e}")
                 if attempt < MAX_RETRIES - 1:
-                    import time; time.sleep(1)
+                    time.sleep(1)
         raise RuntimeError(f"TTS generation failed after {MAX_RETRIES} attempts for language {language_code}")
 
     return await loop.run_in_executor(None, sync_call)
@@ -71,7 +72,6 @@ async def generate_panel_audio(
     Returns list of GeneratedAudio objects with panel_number and local file path.
     """
     language_code = DEFAULT_TTS_CODES.get(country.lower(), "en-US")
-    outputs: List[GeneratedAudio] = []
 
     async def _generate(panel: PanelScript, idx: int) -> GeneratedAudio:
         try:
@@ -79,10 +79,19 @@ async def generate_panel_audio(
             file_path = OUTPUT_DIR / f"panel_{idx+1}.mp3"
             with open(file_path, "wb") as f:
                 f.write(audio_bytes)
-            return GeneratedAudio(panel_number=idx + 1, url=str(file_path))
+            return GeneratedAudio(
+                panel_number=idx + 1,
+                audio_url=str(file_path),
+                duration_seconds=0.0,
+            )
         except Exception as e:
             logger.error(f"Failed to generate audio for panel {idx+1}: {e}")
-            return GeneratedAudio(panel_number=idx + 1, url="", error=str(e))
+            return GeneratedAudio(
+                panel_number=idx + 1,
+                audio_url="",
+                duration_seconds=0.0,
+                error=str(e),
+            )
 
     tasks = [_generate(s, i) for i, s in enumerate(scripts)]
     return await asyncio.gather(*tasks)
@@ -102,7 +111,16 @@ async def generate_full_narration(
         file_path = OUTPUT_DIR / "full_narration.mp3"
         with open(file_path, "wb") as f:
             f.write(audio_bytes)
-        return GeneratedAudio(panel_number=0, url=str(file_path))
+        return GeneratedAudio(
+            panel_number=0,
+            audio_url=str(file_path),
+            duration_seconds=0.0,
+        )
     except Exception as e:
         logger.error(f"Failed to generate full narration: {e}")
-        return GeneratedAudio(panel_number=0, url="", error=str(e))
+        return GeneratedAudio(
+            panel_number=0,
+            audio_url="",
+            duration_seconds=0.0,
+            error=str(e),
+        )

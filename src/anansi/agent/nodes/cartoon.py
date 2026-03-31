@@ -4,8 +4,7 @@ Generates cartoon panels based on the panel scripts,
 audience, and context pack using the Flux Kontext Pro API.
 """
 
-from typing import List
-import os
+from typing import Any, List, cast
 import time
 import logging
 import asyncio
@@ -16,6 +15,7 @@ from pydantic import BaseModel, Field
 from anansi.core.models.script import PanelScript
 from anansi.core.models.cartoon import GeneratedImage
 from anansi.agent.nodes.localizer import gather_context
+from anansi.config import get_settings
 from anansi.core.constants import MAX_PANELS
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ def _build_prompt_text(prompt: CartoonPrompt) -> str:
     )
 
 async def _submit_flux_task(prompt_text: str, reference_url: str | None) -> str:
-    api_key = os.getenv("BFL_API_KEY")
+    api_key = get_settings().bfl_api_key
     if not api_key:
         raise RuntimeError("BFL_API_KEY not set")
 
@@ -54,10 +54,11 @@ async def _submit_flux_task(prompt_text: str, reference_url: str | None) -> str:
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(FLUX_ENDPOINT, json=payload, headers=headers)
         resp.raise_for_status()
-        return resp.json()["data"]["task_id"]
+        body = cast(dict[str, Any], resp.json())
+        return cast(str, body["data"]["task_id"])
 
 async def _poll_flux_result(task_id: str, timeout: float = 30.0, interval: float = 1.5) -> str:
-    api_key = os.getenv("BFL_API_KEY")
+    api_key = get_settings().bfl_api_key
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     status_url = FLUX_STATUS_ENDPOINT.format(task_id=task_id)
 
@@ -69,7 +70,7 @@ async def _poll_flux_result(task_id: str, timeout: float = 30.0, interval: float
             data = resp.json().get("data", {})
             status = data.get("status")
             if status == "SUCCESS":
-                return data["result"]["sample"]
+                return cast(str, data["result"]["sample"])
             elif status in ("FAILED", "ERROR"):
                 raise RuntimeError(f"Flux generation failed for task {task_id}")
             await asyncio.sleep(interval)
