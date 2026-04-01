@@ -26,6 +26,9 @@ dependencies = [
     "python-dotenv",
 ]
 
+[project.scripts]
+anansi-pipeline = "anansi.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest",

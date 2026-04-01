@@ -17,24 +17,26 @@ async def test_end_to_end_cartoon_and_tts(
     # Sample panel scripts
     scripts = [
         PanelScript(
+            panel_number=1,
             panel_id="1",
             caption="Intro",
             dialogue="Hello world",
             prompt="Intro prompt",
-            narration="Welcome to the story"
+            narration="Welcome to the story",
         ),
         PanelScript(
+            panel_number=2,
             panel_id="2",
             caption="Conflict",
             dialogue="Uh oh",
             prompt="Conflict prompt",
-            narration="Something went wrong"
+            narration="Something went wrong",
         ),
     ]
 
     # Mock cartoon context and API
     class DummyContext:
-        visual_cues = ["tree", "river"]
+        art_style_cues = "tree river"
         avoids = ["snow"]
     mock_gather.return_value = DummyContext()
     mock_post.return_value.json = MagicMock(

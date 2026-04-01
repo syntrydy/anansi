@@ -1,13 +1,7 @@
 """
-State module.
-Defines the state structures passed between graph nodes.
+Graph state types live in ``anansi.core.models.state``; re-exported here for convenience.
 """
 
-# from typing import TypedDict
+from anansi.core.models.state import AnansiState, initialize_state
 
-class AnansiState:
-    """
-    TypedDict defining the state of the agent as it traverses the graph.
-    """
-    # TODO: Define state keys for storing intermediate node outputs.
-    pass
+__all__ = ["AnansiState", "initialize_state"]

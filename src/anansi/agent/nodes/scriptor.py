@@ -20,7 +20,7 @@ def write_script(state: AnansiState, scenes: list[Scene], context: CountryData) 
 
     for scene in scenes:
         caption = f"{scene.description}, featuring {', '.join(context.culture.food[:2])}"
-        dialogue = f"Teacher explains {state.topic} in {state.language}"
+        dialogue = f"Teacher explains {state['topic']} in {state['language']}"
         narration = f"Include local elements like {', '.join(context.places.cities[:2])}"
         image_prompt = f"{scene.description}, avoid {', '.join(context.avoids)}"
 

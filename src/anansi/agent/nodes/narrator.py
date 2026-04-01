@@ -71,29 +71,39 @@ async def generate_panel_audio(
     Generate panel-level audio for each panel script.
     Returns list of GeneratedAudio objects with panel_number and local file path.
     """
+    if os.getenv("ANANSI_MOCK_PIPELINE", "").lower() in ("1", "true", "yes"):
+        return [
+            GeneratedAudio(
+                panel_number=s.panel_number,
+                audio_url=f"mock://panel-{s.panel_number}.mp3",
+                duration_seconds=0.0,
+            )
+            for s in scripts
+        ]
+
     language_code = DEFAULT_TTS_CODES.get(country.lower(), "en-US")
 
-    async def _generate(panel: PanelScript, idx: int) -> GeneratedAudio:
+    async def _generate(panel: PanelScript) -> GeneratedAudio:
         try:
             audio_bytes = await synthesize_speech(panel.narration, language_code)
-            file_path = OUTPUT_DIR / f"panel_{idx+1}.mp3"
+            file_path = OUTPUT_DIR / f"panel_{panel.panel_number}.mp3"
             with open(file_path, "wb") as f:
                 f.write(audio_bytes)
             return GeneratedAudio(
-                panel_number=idx + 1,
+                panel_number=panel.panel_number,
                 audio_url=str(file_path),
                 duration_seconds=0.0,
             )
         except Exception as e:
-            logger.error(f"Failed to generate audio for panel {idx+1}: {e}")
+            logger.error(f"Failed to generate audio for panel {panel.panel_number}: {e}")
             return GeneratedAudio(
-                panel_number=idx + 1,
+                panel_number=panel.panel_number,
                 audio_url="",
                 duration_seconds=0.0,
                 error=str(e),
             )
 
-    tasks = [_generate(s, i) for i, s in enumerate(scripts)]
+    tasks = [_generate(s) for s in scripts]
     return await asyncio.gather(*tasks)
 
 

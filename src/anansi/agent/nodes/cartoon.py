@@ -5,9 +5,10 @@ audience, and context pack using the Flux Kontext Pro API.
 """
 
 from typing import Any, List, cast
-import time
-import logging
 import asyncio
+import logging
+import os
+import time
 
 import httpx
 from pydantic import BaseModel, Field
@@ -23,6 +24,21 @@ logger = logging.getLogger(__name__)
 FLUX_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-kontext-pro"
 FLUX_STATUS_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-kontext-pro/{task_id}"
 MAX_RETRIES = 1
+
+
+def _mock_generated_images(scripts: List[PanelScript]) -> List[GeneratedImage]:
+    """Placeholder panels when ``ANANSI_MOCK_PIPELINE`` is set (tests / local dev)."""
+    return [
+        GeneratedImage(
+            panel_number=s.panel_number,
+            url=f"https://example.invalid/mock/panel-{s.panel_number}.png",
+            caption=s.caption,
+            dialogue=s.dialogue,
+            narration=s.narration,
+        )
+        for s in scripts[:MAX_PANELS]
+    ]
+
 
 class CartoonPrompt(BaseModel):
     caption: str
@@ -94,20 +110,26 @@ async def generate_cartoon_panels(
     Returns:
         List of GeneratedImage objects with URLs and metadata.
     """
+    if os.getenv("ANANSI_MOCK_PIPELINE", "").lower() in ("1", "true", "yes"):
+        return _mock_generated_images(scripts)
 
     context_pack = gather_context(country)
     prompts: List[CartoonPrompt] = []
 
-    for i, script in enumerate(scripts[:MAX_PANELS]):
+    context_cues: List[str] = []
+    if getattr(context_pack, "art_style_cues", None):
+        context_cues = [context_pack.art_style_cues]
+
+    for script in scripts[:MAX_PANELS]:
         prompt = CartoonPrompt(
             caption=script.caption,
             dialogue=script.dialogue,
             narration=script.narration,
-            context_cues=getattr(context_pack, "visual_cues", []),
-            avoids=getattr(context_pack, "avoids", []),
+            context_cues=context_cues,
+            avoids=list(getattr(context_pack, "avoids", []) or []),
             audience=audience,
-            panel_number=i + 1,
-            prompt_text=""
+            panel_number=script.panel_number,
+            prompt_text="",
         )
         prompt.prompt_text = _build_prompt_text(prompt)
         prompts.append(prompt)

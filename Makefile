@@ -1,7 +1,10 @@
-.PHONY: install run-ui run-mcp test test-all lint format type-check validate-data
+.PHONY: install run-ui run-mcp run-pipeline test test-all lint format type-check validate-data
 
 install:
 	uv sync
+
+run-pipeline:
+	ANANSI_MOCK_PIPELINE=1 uv run python -m anansi.cli --mock
 
 run-ui:
 	uv run streamlit run src/anansi/ui/app.py

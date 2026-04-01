@@ -1,14 +1,25 @@
-from typing import TypedDict, Dict, Any
+from typing import Any, NotRequired, TypedDict
+
 from anansi.core.models.inputs import TeacherInput
 
+
 class AnansiState(TypedDict):
+    """LangGraph state: teacher inputs plus pipeline fields (optional until set)."""
+
     topic: str
     country: str
     grade: int
     language: str
-    extra_context: Dict[str, Any]
+    extra_context: dict[str, Any]
+    scenes: NotRequired[list[dict[str, Any]]]
+    context_pack: NotRequired[dict[str, Any]]
+    panel_scripts: NotRequired[list[dict[str, Any]]]
+    images: NotRequired[list[dict[str, Any]]]
+    audios: NotRequired[list[dict[str, Any]]]
+    package: NotRequired[dict[str, Any]]
 
-def initialize_state(input_data: dict) -> AnansiState:
+
+def initialize_state(input_data: dict[str, Any]) -> AnansiState:
     validated = TeacherInput(**input_data)
     return AnansiState(
         topic=validated.topic,

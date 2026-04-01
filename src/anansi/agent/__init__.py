@@ -3,8 +3,9 @@ Agent module.
 Defines the LangGraph agent and its nodes.
 """
 
-# from .graph import create_graph
+from anansi.agent.graph import build_graph, run_pipeline
 
 __all__ = [
-    # "create_graph",
+    "build_graph",
+    "run_pipeline",
 ]
