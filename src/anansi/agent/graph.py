@@ -1,11 +1,15 @@
+from collections.abc import Callable
 from typing import Any, cast
 from langgraph.graph import END, START, StateGraph
+
 from anansi.agent.nodes.cartoon import generate_cartoon_panels
 from anansi.agent.nodes.concept import analyze_concept
 from anansi.agent.nodes.localizer import gather_context
 from anansi.agent.nodes.narrator import generate_panel_audio
 from anansi.agent.nodes.scriptor import write_script
 from anansi.agent.nodes.synthesizer import synthesize_output
+from anansi.agent.safety import run_safety_check
+
 from anansi.core.models.context import CountryData
 from anansi.core.models.state import AnansiState
 from anansi.core.models.script import PanelScript
@@ -14,7 +18,7 @@ from anansi.core.models.audio import GeneratedAudio
 from anansi.core.models.cartoon import GeneratedImage
 
 # ----------------------
-# Node implementations
+# Node Implementations
 # ----------------------
 def node_concept(state: AnansiState) -> dict[str, Any]:
     scenes = analyze_concept(state)
@@ -30,14 +34,40 @@ def node_scriptor(state: AnansiState) -> dict[str, Any]:
     scripts = write_script(state, scenes, context)
     return {"panel_scripts": [p.model_dump() for p in scripts]}
 
+def node_safety(state: AnansiState) -> dict[str, Any]:
+    scripts = [PanelScript(**p) for p in state.get("panel_scripts", [])]
+    audience = state.get("audience", "general")
+    results = run_safety_check(scripts, state, audience=audience)
+    return {"safety_results": results}
+
+
 async def node_cartoon(state: AnansiState) -> dict[str, Any]:
     scripts = [PanelScript(**p) for p in state["panel_scripts"]]
-    images = await generate_cartoon_panels(scripts, country=state["country"], audience="kid")
+    unsafe_pns = {
+        int(r["panel_number"])
+        for r in state.get("safety_results", [])
+        if not r.get("safe", True)
+    }
+    audience = state.get("audience", "general")
+    images = await generate_cartoon_panels(
+        scripts,
+        country=state["country"],
+        audience=audience,
+        skip_panel_numbers=unsafe_pns,
+    )
     return {"images": [img.model_dump() for img in images]}
+
 
 async def node_narrator(state: AnansiState) -> dict[str, Any]:
     scripts = [PanelScript(**p) for p in state["panel_scripts"]]
-    audios = await generate_panel_audio(scripts, country=state["country"])
+    unsafe_pns = {
+        int(r["panel_number"])
+        for r in state.get("safety_results", [])
+        if not r.get("safe", True)
+    }
+    audios = await generate_panel_audio(
+        scripts, country=state["country"], skip_panel_numbers=unsafe_pns
+    )
     return {"audios": [a.model_dump() for a in audios]}
 
 def node_synthesizer(state: AnansiState) -> dict[str, Any]:
@@ -49,35 +79,45 @@ def node_synthesizer(state: AnansiState) -> dict[str, Any]:
     return {"package": package.model_dump(mode="json")}
 
 # ----------------------
-# Graph compilation
+# Graph Compilation
 # ----------------------
 def build_graph() -> Any:
     workflow = StateGraph(AnansiState)
     workflow.add_node("concept", node_concept)
     workflow.add_node("localizer", node_localizer)
     workflow.add_node("scriptor", node_scriptor)
+    workflow.add_node("safety", node_safety)
     workflow.add_node("cartoon", node_cartoon)
     workflow.add_node("narrator", node_narrator)
     workflow.add_node("synthesizer", node_synthesizer)
+
     workflow.add_edge(START, "concept")
     workflow.add_edge("concept", "localizer")
     workflow.add_edge("localizer", "scriptor")
-    workflow.add_edge("scriptor", "cartoon")
-    workflow.add_edge("scriptor", "narrator")
+    workflow.add_edge("scriptor", "safety")
+    workflow.add_edge("safety", "cartoon")
+    workflow.add_edge("safety", "narrator")
     workflow.add_edge("cartoon", "synthesizer")
     workflow.add_edge("narrator", "synthesizer")
     workflow.add_edge("synthesizer", END)
+
     return workflow.compile()
 
-async def run_pipeline(initial: AnansiState) -> AnansiState:
-    """Run the full async pipeline and return final state."""
+async def run_pipeline(
+    initial: AnansiState,
+    *,
+    on_state_update: Callable[[AnansiState], None] | None = None,
+) -> AnansiState:
+    """
+    Execute the lesson graph. When ``on_state_update`` is set, stream full state
+    after each step (``stream_mode="values"``) so the UI can refresh progressively.
+    """
     graph = build_graph()
-    return cast(AnansiState, await graph.ainvoke(initial))
-
-# ----------------------
-# Explicit exports
-# ----------------------
-__all__ = [
-    "build_graph",
-    "run_pipeline",
-]
+    if on_state_update is None:
+        return cast(AnansiState, await graph.ainvoke(initial))
+    final: AnansiState | None = None
+    async for snapshot in graph.astream(initial, stream_mode="values"):
+        typed = cast(AnansiState, snapshot)
+        final = typed
+        on_state_update(typed)
+    return final if final is not None else initial

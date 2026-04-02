@@ -2,7 +2,7 @@ from anansi.core.models.context import CountryData
 from anansi.core.exceptions import CountryNotFoundError, DataLoadError
 from anansi.core.constants import DATA_DIR, SUPPORTED_COUNTRIES
 import json
-from pathlib import Path
+
 
 def gather_context(country: str) -> CountryData:
     """

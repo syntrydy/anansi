@@ -12,26 +12,29 @@ from anansi.agent.nodes.narrator import generate_panel_audio, generate_full_narr
 def panel_scripts():
     return [
         PanelScript(
+            panel_number=1,
             panel_id="1",
             caption="Intro",
             dialogue="Hello world",
             prompt="Intro prompt",
-            narration="Welcome to the story"
+            narration="Welcome to the story",
         ),
         PanelScript(
+            panel_number=2,
             panel_id="2",
             caption="Conflict",
             dialogue="Uh oh",
             prompt="Conflict prompt",
-            narration="Something went wrong"
+            narration="Something went wrong",
         ),
         PanelScript(
+            panel_number=3,
             panel_id="3",
             caption="Resolution",
             dialogue="All good",
             prompt="Resolution prompt",
-            narration="The end"
-        )
+            narration="The end",
+        ),
     ]
 
 # -----------------------------
