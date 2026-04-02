@@ -6,6 +6,7 @@ from anansi.agent.nodes.localizer import gather_context
 from anansi.agent.nodes.narrator import generate_panel_audio
 from anansi.agent.nodes.scriptor import write_script
 from anansi.agent.nodes.synthesizer import synthesize_output
+from anansi.core.models.context import CountryData
 from anansi.core.models.state import AnansiState
 from anansi.core.models.script import PanelScript
 from anansi.core.models.storyboard import Scene
@@ -25,7 +26,7 @@ def node_localizer(state: AnansiState) -> dict[str, Any]:
 
 def node_scriptor(state: AnansiState) -> dict[str, Any]:
     scenes = [Scene(**s) for s in state["scenes"]]
-    context = state.get("context_pack", {})
+    context = CountryData.model_validate(state.get("context_pack", {}))
     scripts = write_script(state, scenes, context)
     return {"panel_scripts": [p.model_dump() for p in scripts]}
 

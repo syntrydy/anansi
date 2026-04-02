@@ -1,14 +1,11 @@
 """
-Node 4 - Cartoon Generator
-Generates cartoon panels based on the panel scripts, 
-audience, and context pack using the Flux Kontext Pro API.
+Node 4 - Cartoon Generator (Vyro AI)
+Generates cartoon panels based on panel scripts, audience, and context using Vyro API.
 """
 
-from typing import Any, List, cast
-import time
-import logging
+from typing import Any, List, Optional, cast
 import asyncio
-
+import logging
 import httpx
 from pydantic import BaseModel, Field
 
@@ -20,9 +17,9 @@ from anansi.core.constants import MAX_PANELS
 
 logger = logging.getLogger(__name__)
 
-FLUX_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-kontext-pro"
-FLUX_STATUS_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-kontext-pro/{task_id}"
+VYRO_ENDPOINT = "https://api.vyro.ai/v2/image/generations"
 MAX_RETRIES = 1
+
 
 class CartoonPrompt(BaseModel):
     caption: str
@@ -34,6 +31,7 @@ class CartoonPrompt(BaseModel):
     panel_number: int
     prompt_text: str
 
+
 def _build_prompt_text(prompt: CartoonPrompt) -> str:
     cues = " ".join(prompt.context_cues)
     avoids = ", ".join(f"avoid {a}" for a in prompt.avoids)
@@ -43,38 +41,34 @@ def _build_prompt_text(prompt: CartoonPrompt) -> str:
         f"Cues: {cues}. {avoids}. Audience: {prompt.audience}."
     )
 
-async def _submit_flux_task(prompt_text: str, reference_url: str | None) -> str:
+
+async def _generate_vyro_image(prompt_text: str, reference_url: Optional[str] = None) -> str:
+    """
+    Send prompt to Vyro AI API and return image URL.
+    """
     api_key = get_settings().bfl_api_key
     if not api_key:
         raise RuntimeError("BFL_API_KEY not set")
 
-    payload = {"prompt": prompt_text, "input_image": reference_url}
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    data = {
+        "prompt": prompt_text,
+        "style": "cartoon",
+        "aspect_ratio": "1:1"
+    }
+
+    # Use reference image as seed for panel 2+
+    if reference_url:
+        data["reference_image_url"] = reference_url
+
+    headers = {"Authorization": f"Bearer {api_key}"}
 
     async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(FLUX_ENDPOINT, json=payload, headers=headers)
+        resp = await client.post(VYRO_ENDPOINT, data=data, headers=headers)
         resp.raise_for_status()
         body = cast(dict[str, Any], resp.json())
-        return cast(str, body["data"]["task_id"])
+        # Expect `body["data"]["image_url"]` according to Vyro API
+        return cast(str, body["data"]["image_url"])
 
-async def _poll_flux_result(task_id: str, timeout: float = 30.0, interval: float = 1.5) -> str:
-    api_key = get_settings().bfl_api_key
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    status_url = FLUX_STATUS_ENDPOINT.format(task_id=task_id)
-
-    end_time = time.time() + timeout
-    async with httpx.AsyncClient(timeout=20) as client:
-        while time.time() < end_time:
-            resp = await client.get(status_url, headers=headers)
-            resp.raise_for_status()
-            data = resp.json().get("data", {})
-            status = data.get("status")
-            if status == "SUCCESS":
-                return cast(str, data["result"]["sample"])
-            elif status in ("FAILED", "ERROR"):
-                raise RuntimeError(f"Flux generation failed for task {task_id}")
-            await asyncio.sleep(interval)
-        raise TimeoutError(f"Flux task {task_id} did not complete in time")
 
 async def generate_cartoon_panels(
     scripts: List[PanelScript],
@@ -83,14 +77,14 @@ async def generate_cartoon_panels(
     max_retries: int = MAX_RETRIES
 ) -> List[GeneratedImage]:
     """
-    Generates cartoon panels for each script using contextual cues.
-    
+    Generate cartoon panels for each script using Vyro AI.
+
     Args:
         scripts: List of PanelScript objects.
         country: Country to fetch context pack for local cues.
-        audience: Target audience, e.g., "kid", "adult", "professional".
+        audience: Target audience, e.g., "kid", "adult".
         max_retries: Number of retries per panel on failure.
-    
+
     Returns:
         List of GeneratedImage objects with URLs and metadata.
     """
@@ -98,6 +92,7 @@ async def generate_cartoon_panels(
     context_pack = gather_context(country)
     prompts: List[CartoonPrompt] = []
 
+    # Build prompts
     for i, script in enumerate(scripts[:MAX_PANELS]):
         prompt = CartoonPrompt(
             caption=script.caption,
@@ -113,16 +108,14 @@ async def generate_cartoon_panels(
         prompts.append(prompt)
 
     results: List[GeneratedImage] = []
-    reference_image_url: str | None = None
+    reference_image_url: Optional[str] = None
 
     for prompt in prompts:
         success = False
         for attempt in range(max_retries + 1):
             try:
-                # Use reference image for panel 2+
                 ref_url = reference_image_url if prompt.panel_number > 1 else None
-                task_id = await _submit_flux_task(prompt.prompt_text, ref_url)
-                image_url = await _poll_flux_result(task_id)
+                image_url = await _generate_vyro_image(prompt.prompt_text, ref_url)
 
                 results.append(
                     GeneratedImage(
@@ -136,6 +129,7 @@ async def generate_cartoon_panels(
 
                 if prompt.panel_number == 1:
                     reference_image_url = image_url
+
                 success = True
                 break
             except Exception as exc:
@@ -146,6 +140,5 @@ async def generate_cartoon_panels(
 
         if not success:
             logger.error(f"Panel {prompt.panel_number} ultimately failed")
-            # Optional: append nothing or raise; here we skip
 
     return results

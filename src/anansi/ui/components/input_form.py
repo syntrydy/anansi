@@ -7,7 +7,7 @@ def render_input_form():
         country = st.selectbox("Country", ["Kenya", "Nigeria", "Ghana", "Senegal", "Cameroon"])
         grade = st.number_input("Grade", min_value=1, max_value=12, value=5)
         language = st.selectbox("Instruction Language", ["English", "Swahili", "French"])
-        extra_context = st.text_area(
+        extra_context_text = st.text_area(
             "Extra context (optional, paragraph text)",
             value="",
             height=150,
@@ -16,6 +16,7 @@ def render_input_form():
 
         submitted = st.form_submit_button("Generate Lesson")
         if submitted:
+            extra_context = {"notes": extra_context_text} if extra_context_text else {}
             return {
                 "topic": topic,
                 "country": country,

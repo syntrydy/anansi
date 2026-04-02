@@ -1,9 +1,15 @@
+"""Build a simple lesson PDF from pipeline output for download."""
+
+from io import BytesIO
+from typing import Any
+
+import requests
 import streamlit as st
 from fpdf import FPDF
-from io import BytesIO
-import requests
 
-def export_pdf(result: dict):
+
+def export_pdf(result: dict[str, Any] | None) -> None:
+    """Render a download button that exports ``teacher_guide`` and panels to a PDF."""
     if not result:
         return
 
@@ -16,21 +22,31 @@ def export_pdf(result: dict):
 
     for panel in result.get("panels", []):
         pdf.set_font("Arial", "B", 14)
-        pdf.cell(0, 10, f"Panel {panel.get('panel_number')}: {panel.get('caption')}", ln=True)
+        pdf.cell(
+            0,
+            10,
+            f"Panel {panel.get('panel_number')}: {panel.get('caption')}",
+            ln=True,
+        )
         pdf.set_font("Arial", "", 12)
         pdf.multi_cell(0, 8, panel.get("dialogue", ""))
 
         img_url = panel.get("image_url")
         if img_url:
             try:
-                resp = requests.get(img_url)
+                resp = requests.get(img_url, timeout=30)
+                resp.raise_for_status()
                 pdf.image(BytesIO(resp.content), w=120)
-            except:
+            except (OSError, requests.RequestException, ValueError):
                 pdf.cell(0, 10, "Image failed to load", ln=True)
         pdf.ln(5)
 
-    pdf_output = BytesIO()
-    pdf.output(pdf_output)
-    pdf_output.seek(0)
+    raw = pdf.output(dest="S")
+    pdf_bytes = raw.encode("latin-1") if isinstance(raw, str) else raw
 
-    st.download_button("📄 Download PDF", pdf_output, file_name="lesson.pdf", mime="application/pdf")
+    st.download_button(
+        "📄 Download PDF",
+        data=pdf_bytes,
+        file_name="lesson.pdf",
+        mime="application/pdf",
+    )

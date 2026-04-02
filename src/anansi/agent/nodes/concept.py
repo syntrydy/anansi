@@ -1,4 +1,5 @@
-from anansi.core.models import TeacherInput, Scene, AnansiState
+from anansi.core.models import Scene, AnansiState
+
 
 def analyze_concept(state: AnansiState) -> list[Scene]:
     """
@@ -12,10 +13,14 @@ def analyze_concept(state: AnansiState) -> list[Scene]:
         List of Scene objects.
     """
     scenes = []
-    topics = state.topic.split(",")  # split comma-separated topics
+    topics = state["topic"].split(",")  # split comma-separated topics
     for i, concept in enumerate(topics):
-        scenes.append(Scene(
-            panel_number=i + 1,
-            description=f"Illustrate concept: {concept.strip()}"
-        ))
+        sid = str(i + 1)
+        scenes.append(
+            Scene(
+                scene_id=sid,
+                title=f"Concept {sid}",
+                description=f"Illustrate concept: {concept.strip()}",
+            )
+        )
     return scenes
