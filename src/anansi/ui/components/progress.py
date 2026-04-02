@@ -1,10 +1,8 @@
-"""
-Progress component.
-"""
+import streamlit as st
 
-def render_progress() -> None:
-    """
-    Renders the dynamic progress of the LangGraph agent.
-    """
-    # TODO: Implement live streaming updates from graph execution.
-    pass
+def render_progress():
+    """Render the progress bar and step info."""
+    if st.session_state.get("loading", False):
+        st.info(f"{st.session_state.get('step', '')} ({st.session_state.get('progress', 0)}%)")
+        with st.spinner(f"{st.session_state.get('step', '')}..."):
+            pass

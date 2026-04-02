@@ -24,6 +24,7 @@ dependencies = [
     "langfuse",
     "guardrails-ai",
     "python-dotenv",
+    "fpdf"
 ]
 
 [dependency-groups]
