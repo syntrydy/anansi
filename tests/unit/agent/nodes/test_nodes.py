@@ -50,17 +50,10 @@ async def test_generate_cartoon_panels(
         avoids = ["snow"]
     mock_gather.return_value = DummyContext()
     mock_post.return_value.json = MagicMock(
-        return_value={"data": {"task_id": "123"}}
+        return_value={"data": {"image_url": "https://fake.image/url"}}
     )
     mock_post.return_value.raise_for_status = MagicMock()
-    mock_get.return_value.json = MagicMock(
-        return_value={
-            "data": {
-                "status": "SUCCESS",
-                "result": {"sample": "https://fake.image/url"},
-            }
-        }
-    )
+    mock_get.return_value.json = MagicMock(return_value={})
     mock_get.return_value.raise_for_status = MagicMock()
 
     images = await generate_cartoon_panels(panel_scripts, country="Kenya", audience="kid")
