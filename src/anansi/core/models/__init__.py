@@ -4,7 +4,7 @@ from .script import PanelScript
 from .storyboard import Scene
 from .audio import GeneratedAudio
 from .cartoon import GeneratedImage
-from .output import OutputPackage
+from .output import OutputPackage, PanelOutput
 
 __all__ = [
     "TeacherInput",
@@ -15,4 +15,5 @@ __all__ = [
     "GeneratedAudio",
     "GeneratedImage",
     "OutputPackage",
+    "PanelOutput",
 ]

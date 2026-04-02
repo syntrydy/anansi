@@ -18,7 +18,7 @@ def write_script(state: AnansiState, scenes: list[Scene], context: CountryData) 
     """
     panel_scripts = []
 
-    for scene in scenes:
+    for i, scene in enumerate(scenes):
         caption = f"{scene.description}, featuring {', '.join(context.culture.food[:2])}"
         dialogue = f"Teacher explains {state['topic']} in {state['language']}"
         narration = f"Include local elements like {', '.join(context.places.cities[:2])}"
@@ -26,6 +26,7 @@ def write_script(state: AnansiState, scenes: list[Scene], context: CountryData) 
 
         panel_scripts.append(
             PanelScript(
+                panel_number=i + 1,
                 panel_id=scene.scene_id,
                 caption=caption,
                 dialogue=dialogue,
