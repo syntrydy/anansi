@@ -1,26 +1,26 @@
 """
-Node 4 - Cartoon Generator (Vyro AI)
-Generates cartoon panels based on panel scripts, audience, and context using Vyro API.
+Node 4 - Cartoon Generator (Vyro AI via infrastructure.image).
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Optional, cast
+import time
+from typing import Optional
 
 import httpx
 from pydantic import BaseModel, Field
 
 from anansi.agent.nodes.localizer import gather_context
-from anansi.config import get_settings
 from anansi.core.constants import MAX_PANELS
 from anansi.core.models.cartoon import GeneratedImage
 from anansi.core.models.script import PanelScript
+from anansi.infrastructure.image import generate_image
+from anansi.observability.langfuse_pipeline import trace_panel_observation
 
 logger = logging.getLogger(__name__)
 
-VYRO_ENDPOINT = "https://api.vyro.ai/v2/image/generations"
 MAX_RETRIES = 1
 
 
@@ -45,29 +45,16 @@ def _build_prompt_text(prompt: CartoonPrompt) -> str:
     )
 
 
-async def _generate_vyro_image(
-    prompt_text: str, reference_url: Optional[str] = None
-) -> str:
-    """Send prompt to Vyro AI API and return image URL."""
-    api_key = get_settings().bfl_api_key
-    if not api_key:
-        raise RuntimeError("BFL_API_KEY not set")
-
-    data: dict[str, Any] = {
-        "prompt": prompt_text,
-        "style": "cartoon",
-        "aspect_ratio": "1:1",
-    }
-    if reference_url:
-        data["reference_image_url"] = reference_url
-
-    headers = {"Authorization": f"Bearer {api_key}"}
-
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(VYRO_ENDPOINT, data=data, headers=headers)
-        resp.raise_for_status()
-        body = cast(dict[str, Any], resp.json())
-        return cast(str, body["data"]["image_url"])
+async def _prefetch_reference_url(url: str) -> None:
+    """Warm HTTP connection / CDN for the reference image used on panels 2+."""
+    u = (url or "").strip()
+    if not u.startswith("http"):
+        return
+    try:
+        async with httpx.AsyncClient(timeout=25) as client:
+            await client.get(u)
+    except Exception:
+        pass
 
 
 async def generate_cartoon_panels(
@@ -78,10 +65,9 @@ async def generate_cartoon_panels(
     skip_panel_numbers: set[int] | None = None,
 ) -> list[GeneratedImage]:
     """
-    Generate cartoon panels for each script using Vyro AI.
+    Generate cartoon panels for each script using Vyro (``generate_image``).
 
-    Panels whose numbers appear in ``skip_panel_numbers`` get empty ``url`` rows
-    (no API call), e.g. when blocked by safety.
+    Panels in ``skip_panel_numbers`` skip the API (e.g. safety-blocked).
     """
     skip = skip_panel_numbers or set()
     context_pack = gather_context(country)
@@ -116,13 +102,26 @@ async def generate_cartoon_panels(
                     narration=script.narration,
                 )
             )
+            trace_panel_observation(
+                kind="image",
+                panel_number=pn,
+                duration_ms=0.0,
+                success=False,
+                extra={"skipped_safety": True},
+            )
             continue
 
         success = False
+        t0 = time.perf_counter()
         for attempt in range(max_retries + 1):
             try:
                 ref_url = reference_image_url
-                image_url = await _generate_vyro_image(prompt.prompt_text, ref_url)
+                if ref_url:
+                    await _prefetch_reference_url(ref_url)
+                image_url = await generate_image(
+                    prompt.prompt_text,
+                    reference_image_url=ref_url,
+                )
 
                 results.append(
                     GeneratedImage(
@@ -145,6 +144,7 @@ async def generate_cartoon_panels(
                 )
                 await asyncio.sleep(1)
 
+        elapsed_ms = (time.perf_counter() - t0) * 1000
         if not success:
             logger.error("Panel %s ultimately failed", pn)
             results.append(
@@ -156,5 +156,12 @@ async def generate_cartoon_panels(
                     narration=script.narration,
                 )
             )
+        trace_panel_observation(
+            kind="image",
+            panel_number=pn,
+            duration_ms=elapsed_ms,
+            success=success,
+            extra={"attempts": max_retries + 1},
+        )
 
     return results

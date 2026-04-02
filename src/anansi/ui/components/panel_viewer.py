@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from typing import Any
+from urllib.error import URLError
+from urllib.request import urlopen
 
 import streamlit as st
 
@@ -15,8 +18,30 @@ def _rerun() -> None:
     rerun = getattr(st, "rerun", None)
     if callable(rerun):
         rerun()
-    else:
-        st.experimental_rerun()
+        return
+    legacy = getattr(st, "experimental_rerun", None)
+    if callable(legacy):
+        legacy()
+
+
+def _audio_bytes_for_download(audio_url: str) -> tuple[bytes | None, str]:
+    """Return MP3 bytes and a suggested filename segment for ``st.download_button``."""
+    u = (audio_url or "").strip()
+    if not u:
+        return None, "audio.mp3"
+    if u.startswith("http://") or u.startswith("https://"):
+        try:
+            with urlopen(u, timeout=45) as resp:
+                return resp.read(), "audio.mp3"
+        except (URLError, OSError, ValueError, TypeError):
+            return None, "audio.mp3"
+    path = Path(u)
+    try:
+        if path.is_file():
+            return path.read_bytes(), path.name
+    except OSError:
+        return None, "audio.mp3"
+    return None, "audio.mp3"
 
 
 def render_panel_viewer(result: dict[str, Any] | None) -> None:
@@ -28,6 +53,7 @@ def render_panel_viewer(result: dict[str, Any] | None) -> None:
 
     panels: list[dict[str, Any]] = list(result.get("panels") or [])
     safety_results: list[dict[str, Any]] = list(result.get("safety_results") or [])
+    btn_disabled = bool(st.session_state.get("loading", False))
 
     st.subheader("Generated Panels")
 
@@ -81,11 +107,27 @@ def render_panel_viewer(result: dict[str, Any] | None) -> None:
                 img_slot.info("No image URL for this panel.")
 
             audio_url = panel.get("audio_url") or ""
+            err = panel.get("audio_error")
             if audio_url and not unsafe:
                 st.audio(audio_url)
-            err = panel.get("audio_error")
-            if err:
-                st.warning(f"Audio: {err}")
+                blob, fname = _audio_bytes_for_download(audio_url)
+                if blob:
+                    st.download_button(
+                        label="💾 Download narration (MP3)",
+                        data=blob,
+                        file_name=f"panel_{panel_number}_{fname}",
+                        mime="audio/mpeg",
+                        key=f"audio_dl_{idx}_{panel_number}",
+                        disabled=btn_disabled,
+                        help="Save this panel’s narration audio to your device.",
+                    )
+            elif err:
+                st.warning(f"Audio unavailable: {err}")
+                st.caption(
+                    "No audio file was produced for this panel; download is disabled."
+                )
+            elif not unsafe:
+                st.caption("No audio URL for this panel.")
 
         with col_side:
             if unsafe and display_reason:
@@ -93,7 +135,8 @@ def render_panel_viewer(result: dict[str, Any] | None) -> None:
             if st.button(
                 f"🔄 Regenerate panel {panel_number}",
                 key=f"regen_{idx}",
-                disabled=st.session_state.get("loading", False),
+                disabled=btn_disabled,
+                help="Re-run the full lesson pipeline using your saved form inputs.",
             ):
                 raw = st.session_state.get("last_input")
                 if not raw:
@@ -107,11 +150,13 @@ def render_panel_viewer(result: dict[str, Any] | None) -> None:
 def render_pipeline_preview(snap: dict[str, Any]) -> None:
     """Show incremental thumbnails while the graph is streaming."""
     images = snap.get("images") or []
-    urls = [
-        i.get("url")
-        for i in images
-        if isinstance(i, dict) and (i.get("url") or "").strip()
-    ]
+    urls: list[str] = []
+    for i in images:
+        if not isinstance(i, dict):
+            continue
+        u = (i.get("url") or "").strip()
+        if u:
+            urls.append(u)
     if not urls:
         return
     st.caption("Preview (updates as images complete)")

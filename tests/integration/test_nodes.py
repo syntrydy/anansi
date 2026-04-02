@@ -9,7 +9,7 @@ from anansi.agent.nodes.narrator import generate_panel_audio, generate_full_narr
 @patch("anansi.agent.nodes.cartoon.gather_context")
 @patch("httpx.AsyncClient.post", new_callable=AsyncMock)
 @patch("httpx.AsyncClient.get", new_callable=AsyncMock)
-@patch("anansi.agent.nodes.narrator.synthesize_speech", new_callable=AsyncMock)
+@patch("anansi.agent.nodes.narrator.synthesize_audio", new_callable=AsyncMock)
 async def test_end_to_end_cartoon_and_tts(
     mock_synth, mock_get, mock_post, mock_gather, monkeypatch
 ):
