@@ -14,7 +14,10 @@ in-process client without starting a real subprocess.
 
 import os
 
+from dotenv import load_dotenv
 from fastmcp import FastMCP
+
+load_dotenv()
 
 from anansi.context.repository import repository
 from anansi.context.tools import register_tools

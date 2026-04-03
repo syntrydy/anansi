@@ -1,0 +1,35 @@
+/* Anansi design system — mirrors styles.py palette */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --color-brand:        #9e3d00;
+  --color-brand-dark:   #351000;
+  --color-brand-mid:    #c64f00;
+  --color-brand-light:  #e0c0b2;
+  --color-bg:           #faf9f8;
+  --color-card-bg:      #f4f3f2;
+  --color-text:         #1a1c1c;
+  --color-text-muted:   #594238;
+  --color-error:        #93000a;
+  --color-error-bg:     #ffdad6;
+  --color-success:      #1b6d24;
+  --color-success-bg:   #d6f0d9;
+  --color-white:        #ffffff;
+
+  --radius:             0.75rem;
+  --shadow:             0 2px 8px rgba(0,0,0,0.08);
+
+  --font-heading:       'Manrope', sans-serif;
+  --font-body:          'Inter', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}

@@ -13,6 +13,7 @@ class LessonFormData(TypedDict):
     grade: int
     language: str
     audience: str
+    aspect_ratio: str
     extra_context: dict[str, Any]
 
 
@@ -36,6 +37,11 @@ def render_input_form() -> LessonFormData | None:
             ),
             index=0,
         )
+        aspect_ratio = st.selectbox(
+            "Panel Aspect Ratio",
+            options=["1:1", "16:9", "4:3"],
+            index=0,
+        )
         extra_context_text = st.text_area(
             "Extra context (optional, paragraph text)",
             value="",
@@ -54,6 +60,7 @@ def render_input_form() -> LessonFormData | None:
                 grade=int(grade),
                 language=language,
                 audience=str(audience),
+                aspect_ratio=str(aspect_ratio),
                 extra_context=extra,
             )
     return None

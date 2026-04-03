@@ -1,0 +1,141 @@
+.card {
+  background: var(--color-white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border-left: 3px solid var(--color-brand);
+}
+
+.unsafe {
+  border-left-color: var(--color-error);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--color-brand);
+  padding: 0.5rem 1rem;
+  color: var(--color-white);
+}
+
+.unsafe .header {
+  background: var(--color-error);
+}
+
+.number {
+  font-weight: 800;
+  font-size: 0.85rem;
+  background: rgba(0,0,0,0.25);
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+
+.panelTitle {
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.image {
+  width: 100%;
+  border-radius: calc(var(--radius) - 2px);
+  object-fit: cover;
+}
+
+.safetyOverlay {
+  background: var(--color-error-bg);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.safetyIcon { font-size: 1.75rem; }
+
+.safetyReason {
+  color: var(--color-error);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fieldLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+.textarea {
+  width: 100%;
+  border: 1px solid var(--color-brand-light);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  resize: vertical;
+  background: var(--color-bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.textarea:focus { border-color: var(--color-brand); }
+
+.narration {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.audio {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+audio { flex: 1; min-width: 200px; }
+
+.audioDownload {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-brand);
+  text-decoration: none;
+}
+
+.audioDownload:hover { text-decoration: underline; }
+
+.audioError {
+  font-size: 0.8rem;
+  color: var(--color-error);
+  margin: 0;
+}

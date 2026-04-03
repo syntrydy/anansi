@@ -19,8 +19,9 @@ SUPPORTED_COUNTRIES: frozenset[str] = frozenset(
     }
 )
 
-# Google Cloud TTS BCP-47 fallback codes keyed by lowercase country name.
-# Tools use these when the JSON pack's tts_code is empty or unavailable.
+# Language codes keyed by lowercase country name.
+# OpenAI TTS auto-detects language from input text; these codes are kept for
+# any future language-aware routing (e.g. selecting a voice per locale).
 DEFAULT_TTS_CODES: dict[str, str] = {
     "kenya": "sw-KE",
     "nigeria": "en-NG",

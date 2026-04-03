@@ -13,6 +13,7 @@ class AnansiState(TypedDict):
     grade: int
     language: str
     audience: str
+    aspect_ratio: str
     extra_context: dict[str, Any]
     scenes: NotRequired[list[dict[str, Any]]]
     context_pack: NotRequired[dict[str, Any]]
@@ -32,5 +33,6 @@ def initialize_state(input_data: dict[str, Any]) -> AnansiState:
         "grade": validated.grade,
         "language": validated.language,
         "audience": validated.audience,
+        "aspect_ratio": validated.aspect_ratio,
         "extra_context": validated.extra_context,
     }

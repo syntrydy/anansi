@@ -1,0 +1,186 @@
+.app {
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.header {
+  background: var(--color-brand);
+  padding: 1rem 2rem;
+  color: var(--color-white);
+}
+
+.logo {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.75rem;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.tagline {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.7);
+  margin: 0;
+}
+
+.main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.runningMsg {
+  color: var(--color-brand);
+  font-weight: 600;
+  text-align: center;
+  animation: fadeIn 0.4s ease;
+}
+
+.errorBox {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.retryBtn {
+  border: 1.5px solid var(--color-error);
+  background: transparent;
+  color: var(--color-error);
+  border-radius: 6px;
+  padding: 0.3rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.doneActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.resetBtn {
+  background: transparent;
+  border: 1.5px solid var(--color-brand);
+  color: var(--color-brand);
+  border-radius: var(--radius);
+  padding: 0.4rem 1.1rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.resetBtn:hover {
+  background: var(--color-brand);
+  color: var(--color-white);
+}
+
+.storyboard {
+  width: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: block;
+}
+
+.noImage {
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+}
+
+.panelList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--color-white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+.panelRow {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.panelNum {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--color-brand);
+  min-width: 2rem;
+  padding-top: 0.15rem;
+}
+
+.panelCaption {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.panelDialogue {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.guide {
+  background: var(--color-white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.guide summary {
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.guideText {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  margin: 0.75rem 0 0;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.guideText h1, .guideText h2, .guideText h3 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  color: var(--color-brand);
+  margin: 1rem 0 0.35rem;
+}
+
+.guideText h1 { font-size: 1.1rem; }
+.guideText h2 { font-size: 1rem; }
+
+.guideText strong { font-weight: 700; color: var(--color-text); }
+
+.guideText ol, .guideText ul {
+  padding-left: 1.25rem;
+  margin: 0.35rem 0;
+}
+
+.guideText li { margin: 0.2rem 0; }
+
+.guideText p { margin: 0.35rem 0; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

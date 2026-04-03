@@ -14,20 +14,30 @@ from anansi.config import get_settings
 logger = logging.getLogger(__name__)
 
 
-def get_llm() -> Any | None:
+def get_llm(capability: str = "standard") -> Any | None:
     """
     Return a LangChain chat model, or ``None`` if no provider is configured.
+
+    Args:
+        capability: ``"reasoning"`` selects the more capable model (Claude Sonnet /
+                    Mistral); anything else selects the default model (Claude Haiku /
+                    Llama 3.2).
 
     Uses ``USE_LOCAL`` / Ollama when enabled, otherwise Anthropic when
     ``ANTHROPIC_API_KEY`` is set.
     """
     settings = get_settings()
+    use_reasoning = capability == "reasoning"
+
     if settings.use_local_llm:
         try:
             from langchain_ollama import ChatOllama
 
+            model_name = (
+                settings.ollama_model_reasoning if use_reasoning else settings.ollama_model
+            )
             return ChatOllama(
-                model=settings.ollama_model,
+                model=model_name,
                 base_url=settings.ollama_url,
             )
         except Exception as exc:
@@ -40,9 +50,12 @@ def get_llm() -> Any | None:
     try:
         from langchain_anthropic import ChatAnthropic
 
+        model_name = (
+            settings.anthropic_model_reasoning if use_reasoning else settings.anthropic_model
+        )
         # Pydantic model init is over-strict under mypy for optional chat fields.
         return ChatAnthropic(
-            model_name=settings.anthropic_model,
+            model_name=model_name,
             api_key=SecretStr(settings.anthropic_api_key),
         )  # type: ignore[call-arg]
     except Exception as exc:

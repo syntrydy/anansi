@@ -70,10 +70,19 @@ def render_panel_viewer(result: dict[str, Any] | None) -> None:
         unsafe = not safe or (safety is not None and not safety.get("safe", True))
         display_reason = reason or (safety or {}).get("reason")
 
-        header = f"Panel {panel_number}"
+        title = f"Panel {panel_number}"
         if unsafe:
-            header = f"⚠️ {header} — review required"
-        container.markdown(f"**{header}**")
+            badge = '<span class="anansi-badge anansi-badge-unsafe">Review Required</span>'
+        else:
+            badge = '<span class="anansi-badge anansi-badge-active">Active</span>'
+        container.markdown(
+            f'<div class="anansi-panel-card">'
+            f'  <div class="anansi-panel-header">'
+            f'    <h3>{title}</h3>{badge}'
+            f'  </div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
         col_main, col_side = container.columns([2, 1])
 
@@ -104,7 +113,7 @@ def render_panel_viewer(result: dict[str, Any] | None) -> None:
                     use_column_width=True,
                 )
             else:
-                img_slot.info("No image URL for this panel.")
+                img_slot.warning("Image generation failed. Use 'Regenerate panel' to try again.")
 
             audio_url = panel.get("audio_url") or ""
             err = panel.get("audio_error")
@@ -113,7 +122,7 @@ def render_panel_viewer(result: dict[str, Any] | None) -> None:
                 blob, fname = _audio_bytes_for_download(audio_url)
                 if blob:
                     st.download_button(
-                        label="💾 Download narration (MP3)",
+                        label="Download narration (MP3)",
                         data=blob,
                         file_name=f"panel_{panel_number}_{fname}",
                         mime="audio/mpeg",
@@ -133,7 +142,7 @@ def render_panel_viewer(result: dict[str, Any] | None) -> None:
             if unsafe and display_reason:
                 st.error(display_reason)
             if st.button(
-                f"🔄 Regenerate panel {panel_number}",
+                f"Regenerate panel {panel_number}",
                 key=f"regen_{idx}",
                 disabled=btn_disabled,
                 help="Re-run the full lesson pipeline using your saved form inputs.",
