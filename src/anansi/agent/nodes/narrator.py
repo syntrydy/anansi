@@ -1,67 +1,31 @@
 """
-Node 6 – Narrator (TTS)
-Generates panel-level and full narration audio asynchronously using Google Cloud TTS.
+Node 6 – Narrator (TTS via infrastructure.audio).
 """
 
-from typing import List
+from __future__ import annotations
+
 import asyncio
 import logging
 import os
-import time
+import time as time_module
 from pathlib import Path
+from typing import List
 
-from google.cloud import texttospeech
-from google.api_core.exceptions import GoogleAPIError
-
-from anansi.core.models.script import PanelScript
 from anansi.core.models.audio import GeneratedAudio
+from anansi.core.models.script import PanelScript
 from anansi.core.constants import DEFAULT_TTS_CODES
+from anansi.infrastructure.audio import synthesize_audio
+from anansi.observability.langfuse_pipeline import trace_panel_observation
 
 logger = logging.getLogger(__name__)
-MAX_RETRIES = 2
 
 OUTPUT_DIR = Path(os.getenv("AUDIO_OUTPUT_DIR", "/tmp"))
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def get_tts_client() -> texttospeech.TextToSpeechClient:
-    """
-    Returns a Google TTS client.
-    Requires GOOGLE_APPLICATION_CREDENTIALS env variable to be set.
-    """
-    if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-        raise RuntimeError("Environment variable GOOGLE_APPLICATION_CREDENTIALS is not set")
-    return texttospeech.TextToSpeechClient()
-
-
 async def synthesize_speech(text: str, language_code: str) -> bytes:
-    """
-    Asynchronously calls Google TTS to synthesize speech using an executor.
-    Returns audio content as bytes.
-    """
-    loop = asyncio.get_running_loop()
-
-    def sync_call() -> bytes:
-        client = get_tts_client()
-        input_text = texttospeech.SynthesisInput(text=text)
-        voice = texttospeech.VoiceSelectionParams(
-            language_code=language_code,
-            ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
-        )
-        audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
-        for attempt in range(MAX_RETRIES):
-            try:
-                response = client.synthesize_speech(
-                    input=input_text, voice=voice, audio_config=audio_config
-                )
-                return response.audio_content
-            except GoogleAPIError as e:
-                logger.warning(f"TTS attempt {attempt+1} failed for language {language_code}: {e}")
-                if attempt < MAX_RETRIES - 1:
-                    time.sleep(1)
-        raise RuntimeError(f"TTS generation failed after {MAX_RETRIES} attempts for language {language_code}")
-
-    return await loop.run_in_executor(None, sync_call)
+    """Backward-compatible alias for tests and callers."""
+    return await synthesize_audio(text, language_code)
 
 
 async def generate_panel_audio(
@@ -79,17 +43,32 @@ async def generate_panel_audio(
     async def _generate(panel: PanelScript) -> GeneratedAudio:
         pn = panel.panel_number
         if pn in skip:
+            trace_panel_observation(
+                kind="audio",
+                panel_number=pn,
+                duration_ms=0.0,
+                success=False,
+                extra={"skipped_safety": True},
+            )
             return GeneratedAudio(
                 panel_number=pn,
                 audio_url="",
                 duration_seconds=0.0,
                 error="Skipped (safety)",
             )
+        t0 = time_module.perf_counter()
         try:
-            audio_bytes = await synthesize_speech(panel.narration, language_code)
+            audio_bytes = await synthesize_audio(panel.narration, language_code)
             file_path = OUTPUT_DIR / f"panel_{pn}.mp3"
             with open(file_path, "wb") as f:
                 f.write(audio_bytes)
+            elapsed_ms = (time_module.perf_counter() - t0) * 1000
+            trace_panel_observation(
+                kind="audio",
+                panel_number=pn,
+                duration_ms=elapsed_ms,
+                success=True,
+            )
             return GeneratedAudio(
                 panel_number=pn,
                 audio_url=str(file_path),
@@ -97,6 +76,14 @@ async def generate_panel_audio(
             )
         except Exception as e:
             logger.error("Failed to generate audio for panel %s: %s", pn, e)
+            elapsed_ms = (time_module.perf_counter() - t0) * 1000
+            trace_panel_observation(
+                kind="audio",
+                panel_number=pn,
+                duration_ms=elapsed_ms,
+                success=False,
+                extra={"error": str(e)},
+            )
             return GeneratedAudio(
                 panel_number=pn,
                 audio_url="",
@@ -118,7 +105,7 @@ async def generate_full_narration(
     full_text = " ".join([f"{s.caption}. {s.dialogue}" for s in scripts])
     language_code = DEFAULT_TTS_CODES.get(country.lower(), "en-US")
     try:
-        audio_bytes = await synthesize_speech(full_text, language_code)
+        audio_bytes = await synthesize_audio(full_text, language_code)
         file_path = OUTPUT_DIR / "full_narration.mp3"
         with open(file_path, "wb") as f:
             f.write(audio_bytes)
@@ -128,7 +115,7 @@ async def generate_full_narration(
             duration_seconds=0.0,
         )
     except Exception as e:
-        logger.error(f"Failed to generate full narration: {e}")
+        logger.error("Failed to generate full narration: %s", e)
         return GeneratedAudio(
             panel_number=0,
             audio_url="",

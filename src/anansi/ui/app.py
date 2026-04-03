@@ -23,8 +23,10 @@ def _rerun() -> None:
     fn = getattr(st, "rerun", None)
     if callable(fn):
         fn()
-    else:
-        st.experimental_rerun()
+        return
+    legacy = getattr(st, "experimental_rerun", None)
+    if callable(legacy):
+        legacy()
 
 
 def _hash_input(data: dict[str, Any]) -> str:
@@ -56,9 +58,19 @@ st.set_page_config(page_title="Anansi Teacher Tool", page_icon="📚", layout="w
 os.environ.setdefault("ANANSI_MOCK_PIPELINE", "1")
 init_session()
 st.session_state.setdefault("pdf_build_id", 0)
+st.session_state.setdefault("pipeline_summary_text", "")
 
 st.title("📚 Anansi Teaching Assistant")
 st.caption("Generate culturally-aware visual lessons with audio narration")
+
+top_pipeline_status = st.empty()
+busy = bool(st.session_state.get("loading", False))
+if busy:
+    top_pipeline_status.markdown("**Pipeline:** running…")
+elif st.session_state.get("pipeline_summary_text"):
+    top_pipeline_status.markdown(
+        f"**Pipeline:** {st.session_state['pipeline_summary_text']}"
+    )
 
 form_data = render_input_form()
 
@@ -79,7 +91,10 @@ if form_data:
             preview_slot = st.empty()
 
             def on_update(snap: AnansiState) -> None:
-                status_slot.markdown(f"**Pipeline:** {_pipeline_status_line(snap)}")
+                line = _pipeline_status_line(snap)
+                st.session_state["pipeline_summary_text"] = line
+                top_pipeline_status.markdown(f"**Pipeline:** {line}")
+                status_slot.markdown(f"**Pipeline:** {line}")
                 with preview_slot.container():
                     render_pipeline_preview(cast(dict[str, Any], snap))
 
@@ -91,8 +106,16 @@ if form_data:
             if not isinstance(pkg, dict):
                 raise RuntimeError("Pipeline finished without a package payload")
             set_result(pkg)
+            st.session_state["pipeline_summary_text"] = _pipeline_status_line(
+                final_state
+            )
+            top_pipeline_status.markdown(
+                f"**Pipeline:** {st.session_state['pipeline_summary_text']} ✅"
+            )
             set_progress(100, "Done")
-            status_slot.markdown("**Pipeline:** complete ✅")
+            status_slot.markdown(
+                f"**Pipeline:** {st.session_state['pipeline_summary_text']} ✅"
+            )
         except Exception as e:
             st.error(f"Pipeline failed: {e}")
         finally:
@@ -103,19 +126,34 @@ render_progress()
 if st.session_state.result:
     st.success("Lesson generated successfully ✅")
 
+    btn_disabled = bool(st.session_state.get("loading", False))
     c1, c2, c3 = st.columns(3)
     with c1:
-        if st.button("🔄 Regenerate All"):
+        if st.button(
+            "🔄 Regenerate All",
+            disabled=btn_disabled,
+            help="Clear the current lesson and run the full pipeline again from your last form inputs.",
+        ):
             reset()
             st.session_state.pop("last_input_hash", None)
+            st.session_state["pipeline_summary_text"] = ""
             _rerun()
     with c2:
-        if st.button("🗑 Clear"):
+        if st.button(
+            "🗑 Clear",
+            disabled=btn_disabled,
+            help="Remove the generated lesson from this session (keeps your form until you submit again).",
+        ):
             reset()
             st.session_state.pop("last_input_hash", None)
+            st.session_state["pipeline_summary_text"] = ""
             _rerun()
     with c3:
-        if st.button("↻ Rebuild PDF"):
+        if st.button(
+            "↻ Rebuild PDF",
+            disabled=btn_disabled,
+            help="Increment the PDF build id so the download button refreshes from the current on-screen panel text.",
+        ):
             st.session_state["pdf_build_id"] = (
                 int(st.session_state.get("pdf_build_id", 0)) + 1
             )

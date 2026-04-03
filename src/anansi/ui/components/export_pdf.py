@@ -9,7 +9,7 @@ from urllib.error import URLError
 from urllib.request import urlopen
 
 import streamlit as st
-from fpdf import FPDF
+from fpdf import FPDF  # type: ignore[import-untyped]
 
 
 def _image_bytes(url: str) -> bytes | None:
@@ -20,7 +20,10 @@ def _image_bytes(url: str) -> bytes | None:
     if u.startswith("http://") or u.startswith("https://"):
         try:
             with urlopen(u, timeout=30) as resp:
-                return resp.read()
+                chunk = resp.read()
+                if not isinstance(chunk, bytes):
+                    return None
+                return chunk
         except (URLError, OSError, ValueError, TypeError):
             return None
     path = Path(u)
@@ -114,8 +117,11 @@ def export_pdf(
 
         pdf.ln(6)
 
-    raw = pdf.output(dest="S")
-    pdf_bytes = raw.encode("latin-1") if isinstance(raw, str) else raw
+    raw: str | bytes = pdf.output(dest="S")
+    if isinstance(raw, str):
+        pdf_bytes = raw.encode("latin-1")
+    else:
+        pdf_bytes = raw
 
     st.download_button(
         "📄 Download PDF",

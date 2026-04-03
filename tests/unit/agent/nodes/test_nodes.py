@@ -69,7 +69,7 @@ async def test_generate_cartoon_panels(
 # Node 6: TTS (Narrator)
 # -----------------------------
 @pytest.mark.asyncio
-@patch("anansi.agent.nodes.narrator.synthesize_speech", new_callable=AsyncMock)
+@patch("anansi.agent.nodes.narrator.synthesize_audio", new_callable=AsyncMock)
 async def test_generate_panel_audio(mock_synth, panel_scripts):
     mock_synth.return_value = b"FAKE_AUDIO_BYTES"
     outputs = await generate_panel_audio(panel_scripts, country="Kenya")
@@ -78,7 +78,7 @@ async def test_generate_panel_audio(mock_synth, panel_scripts):
         assert out.audio_url.endswith(".mp3")
 
 @pytest.mark.asyncio
-@patch("anansi.agent.nodes.narrator.synthesize_speech", new_callable=AsyncMock)
+@patch("anansi.agent.nodes.narrator.synthesize_audio", new_callable=AsyncMock)
 async def test_generate_full_narration(mock_synth, panel_scripts):
     mock_synth.return_value = b"FAKE_AUDIO_BYTES"
     output = await generate_full_narration(panel_scripts, country="Kenya")
