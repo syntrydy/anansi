@@ -1,19 +1,25 @@
 """
-Image infrastructure — Vyro AI (reference image for panel continuity).
+Image infrastructure — Replicate (FLUX Schnell, cartoon style).
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+import os
+from typing import Any
 
-import httpx
-
-from anansi.config import get_settings
+import replicate
 
 logger = logging.getLogger(__name__)
 
-VYRO_ENDPOINT = "https://api.vyro.ai/v2/image/generations"
+_MODEL = "black-forest-labs/flux-schnell"
+
+_SUPPORTED_RATIOS = {"1:1", "16:9", "4:3", "9:16", "3:4"}
+_DEFAULT_RATIO = "1:1"
+
+
+def _ratio(aspect_ratio: str) -> str:
+    return aspect_ratio if aspect_ratio in _SUPPORTED_RATIOS else _DEFAULT_RATIO
 
 
 async def generate_image(
@@ -24,31 +30,37 @@ async def generate_image(
     aspect_ratio: str = "1:1",
 ) -> str:
     """
-    Call Vyro image generation and return the resulting image URL.
-
-    Args:
-        prompt: Full prompt text.
-        reference_image_url: Optional URL of the previous panel for consistency.
-        style: Vyro style preset.
-        aspect_ratio: Aspect ratio string accepted by the API.
+    Generate a cartoon-style image via Replicate (FLUX Schnell).
+    Returns the URL of the generated image.
     """
-    settings = get_settings()
-    api_key = settings.bfl_api_key
-    if not api_key:
-        raise RuntimeError("BFL_API_KEY not set")
+    token = os.getenv("REPLICATE_API_TOKEN", "")
+    if not token:
+        raise RuntimeError("REPLICATE_API_TOKEN is not set")
 
-    data: dict[str, Any] = {
-        "prompt": prompt,
-        "style": style,
-        "aspect_ratio": aspect_ratio,
+    styled_prompt = (
+        f"Educational comic strip, multiple illustration panels in a grid, "
+        f"bright colors, flat cartoon style, African characters, children's book aesthetic, "
+        f"no text, no words, no letters, no captions inside the image. {prompt}"
+    )
+
+    input_payload: dict[str, Any] = {
+        "prompt": styled_prompt,
+        "aspect_ratio": _ratio(aspect_ratio),
+        "num_outputs": 1,
+        "output_format": "webp",
+        "output_quality": 85,
     }
-    if reference_image_url:
-        data["reference_image_url"] = reference_image_url
 
-    headers = {"Authorization": f"Bearer {api_key}"}
+    client = replicate.Client(api_token=token)
+    output = await client.async_run(_MODEL, input=input_payload)
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(VYRO_ENDPOINT, data=data, headers=headers)
-        resp.raise_for_status()
-        body = cast(dict[str, Any], resp.json())
-        return cast(str, body["data"]["image_url"])
+    logger.info("Replicate raw output type=%s value=%r", type(output).__name__, output)
+
+    # output may be a list, iterator, or single FileOutput — iterate safely.
+    items = list(output) if output is not None else []
+    if not items:
+        raise RuntimeError("Replicate returned empty output")
+
+    url = str(items[0])
+    logger.info("Storyboard image URL: %s", url)
+    return url

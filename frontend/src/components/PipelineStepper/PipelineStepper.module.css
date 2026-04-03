@@ -1,0 +1,74 @@
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 1.25rem 0;
+  overflow-x: auto;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-card-bg);
+  border: 2px solid var(--color-brand-light);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.done {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--color-white);
+}
+
+.active {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-white);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(158, 61, 0, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(158, 61, 0, 0); }
+}
+
+.stepLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-left: 0.4rem;
+  white-space: nowrap;
+}
+
+.doneLabel {
+  color: var(--color-success);
+}
+
+.connector {
+  width: 2.5rem;
+  height: 2px;
+  background: var(--color-brand-light);
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.connectorDone {
+  background: var(--color-success);
+}

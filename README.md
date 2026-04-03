@@ -33,7 +33,7 @@ Anansi produces a complete teaching package:
 
 ## Architecture
 
-Anansi is a **6-node LangGraph stateful agent** with a FastMCP cultural context server, Streamlit teacher UI, and Langfuse observability.
+Anansi is a **7-node LangGraph stateful agent** with a FastMCP cultural context server, Streamlit teacher UI, and Langfuse observability.
 
 ```
 Teacher Input (Topic · Country · Grade · Language)
@@ -49,10 +49,13 @@ Teacher Input (Topic · Country · Grade · Language)
 │                    Server    │    ├── N4 Cartoon Gen  │
 │                              │    │   (FLUX Kontext)  │
 │                              │    │                   │
+│                              │    ├── N5 Safety Check │
+│                              │    │   (Claude Haiku)  │
+│                              │    │                   │
 │                              │    └── N6 Narrator     │
 │                              │        (Google TTS)    │
 │                              │              │         │
-│                              └──── N5 Synthesizer ───┘│
+│                              └──── N7 Synthesizer ───┘│
 └───────────────────────────────────────────────────────┘
         │
         ▼
@@ -61,7 +64,7 @@ Output: Panels · Audio · PDF · Teacher Guide
               ↕ All nodes traced via Langfuse
 ```
 
-Nodes 4 and 6 run **in parallel** after Node 3 completes — image generation and audio narration are produced simultaneously.
+Nodes 4, 5, and 6 run **in parallel** after Node 3 completes — image generation, safety checking, and audio narration are produced simultaneously.
 
 ---
 
@@ -70,12 +73,12 @@ Nodes 4 and 6 run **in parallel** after Node 3 completes — image generation an
 | Layer | Technology | Role |
 |-------|-----------|------|
 | UI | Streamlit | Teacher input form, live progress, panel viewer, audio, download |
-| Agent core | LangGraph | 6-node stateful graph, parallel branches, shared TypedDict state |
+| Agent core | LangGraph | 7-node stateful graph, parallel branches, shared TypedDict state |
 | Context server | FastMCP (Python) | 5 MCP tools returning per-country cultural context packs |
-| Image generation | FLUX.1 Kontext Pro | Multi-panel cartoon generation with character consistency |
+| Image generation | FLUX.1 Kontext Pro (Vyro AI) | Multi-panel cartoon generation with character consistency |
 | Audio narration | Google Cloud TTS | Panel-by-panel narration in local African languages |
 | Observability | Langfuse | Full trace, prompt analytics, cost and latency per node |
-| Validation | Pydantic + Guardrails AI | Structured outputs at every node boundary |
+| Validation | Pydantic | Structured outputs at every node boundary |
 | Content safety | LLM-as-judge (Claude Haiku) | African-context-aware age and cultural appropriateness check |
 
 ---
@@ -84,38 +87,45 @@ Nodes 4 and 6 run **in parallel** after Node 3 completes — image generation an
 
 ```
 anansi/
-├── anansi/
-│   ├── agent/
-│   │   ├── graph.py          # LangGraph graph definition
-│   │   ├── state.py          # TypedDict AnansiState
-│   │   ├── nodes/
-│   │   │   ├── concept.py    # Node 1 — Concept Analyzer
-│   │   │   ├── localizer.py  # Node 2 — Localizer (calls MCP)
-│   │   │   ├── scriptor.py   # Node 3 — Scriptor
-│   │   │   ├── cartoon.py    # Node 4 — Cartoon Generator
-│   │   │   ├── narrator.py   # Node 6 — Narrator
-│   │   │   └── synthesizer.py # Node 5 — Synthesizer
-│   │   └── safety.py         # LLM-as-judge content check
-│   ├── mcp/
-│   │   ├── server.py         # FastMCP server entry point
-│   │   ├── tools.py          # @mcp.tool() definitions
-│   │   └── data/             # Country JSON context packs
-│   │       ├── kenya.json
-│   │       ├── nigeria.json
-│   │       ├── senegal.json
-│   │       ├── ghana.json
-│   │       └── cameroon.json
-│   ├── models/
-│   │   ├── inputs.py         # TeacherInput Pydantic model
-│   │   ├── outputs.py        # All output Pydantic models
-│   │   └── context.py        # ContextPack model
-│   ├── config.py             # LLM factory — cloud or Ollama
-│   └── ui/
-│       └── app.py            # Streamlit application
+├── src/
+│   └── anansi/
+│       ├── agent/
+│       │   ├── graph.py          # LangGraph graph definition
+│       │   ├── safety.py         # Node 5 — LLM-as-judge content check
+│       │   └── nodes/
+│       │       ├── concept.py    # Node 1 — Concept Analyzer
+│       │       ├── localizer.py  # Node 2 — Localizer (calls MCP)
+│       │       ├── scriptor.py   # Node 3 — Scriptor
+│       │       ├── cartoon.py    # Node 4 — Cartoon Generator
+│       │       ├── narrator.py   # Node 6 — Narrator
+│       │       └── synthesizer.py # Node 7 — Synthesizer
+│       ├── context/
+│       │   ├── server.py         # FastMCP server entry point
+│       │   ├── tools.py          # @mcp.tool() definitions
+│       │   ├── repository.py     # ContextRepository singleton
+│       │   └── data/             # Country JSON context packs
+│       │       ├── kenya.json
+│       │       ├── nigeria.json
+│       │       ├── senegal.json
+│       │       ├── ghana.json
+│       │       └── cameroon.json
+│       ├── core/
+│       │   └── models/
+│       │       ├── inputs.py     # TeacherInput Pydantic model
+│       │       ├── outputs.py    # All output Pydantic models
+│       │       ├── state.py      # TypedDict AnansiState
+│       │       └── context.py    # CountryData model
+│       ├── infrastructure/
+│       │   ├── llm.py            # LLM factory — cloud or Ollama
+│       │   ├── image.py          # Vyro AI image generation
+│       │   ├── audio.py          # Google Cloud TTS
+│       │   └── observability.py  # Langfuse handler
+│       ├── config.py             # Pydantic settings (env vars)
+│       └── ui/
+│           └── app.py            # Streamlit application
 ├── tests/
-│   ├── test_nodes.py
-│   ├── test_mcp.py
-│   └── test_safety.py
+│   ├── unit/
+│   └── integration/
 ├── .env.example
 ├── pyproject.toml        # uv project config and dependencies
 ├── uv.lock               # locked dependency versions
@@ -130,7 +140,7 @@ anansi/
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) — dependency management
-- API keys: Anthropic, Replicate (or SiliconFlow), Google Cloud, Langfuse
+- API keys: Anthropic, Vyro AI, Google Cloud, Langfuse
 
 ### Installation
 
@@ -157,10 +167,8 @@ Edit `.env`:
 # LLM
 ANTHROPIC_API_KEY=sk-ant-...
 
-# Image generation (choose one)
-REPLICATE_API_TOKEN=r8_...
-# or
-SILICONFLOW_API_KEY=...
+# Image generation (Vyro AI)
+BFL_API_KEY=...
 
 # Audio
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
@@ -181,10 +189,10 @@ OLLAMA_URL=http://localhost:11434
 
 ```bash
 # Start the FastMCP cultural context server
-uv run python -m anansi.mcp.server
+uv run python -m anansi.context.server
 
 # In a separate terminal, start the Streamlit UI
-uv run streamlit run anansi/ui/app.py
+uv run streamlit run src/anansi/ui/app.py
 ```
 
 Open [http://localhost:8501](http://localhost:8501) in your browser.
@@ -205,7 +213,7 @@ The FastMCP server exposes 5 tools called by the Localizer node (Node 2):
 
 ### Adding a new country
 
-Create a new JSON file in `anansi/mcp/data/`:
+Create a new JSON file in `src/anansi/context/data/`:
 
 ```json
 {
@@ -382,11 +390,11 @@ More countries are added in Phase 2 based on usage data. See [Adding a new count
 
 ### Phase 1 — Cloud MVP
 - [x] Architecture design
-- [ ] LangGraph graph implementation (all 6 nodes)
-- [ ] FastMCP server with 5 pilot country packs
-- [ ] Streamlit UI with all output formats
-- [ ] Langfuse observability
-- [ ] Content safety (LLM-as-judge)
+- [x] LangGraph graph implementation (all 7 nodes)
+- [x] FastMCP context server with 5 pilot country packs
+- [x] Streamlit UI with all output formats
+- [x] Langfuse observability
+- [x] Content safety (LLM-as-judge)
 - [ ] Teacher feedback loop
 
 ### Phase 2 — Scale
@@ -411,7 +419,7 @@ See [Adding a new country](#adding-a-new-country) — just a JSON file, no code 
 
 ### Correcting cultural data
 If you spot a wrong name, place, or cultural detail:
-1. Open `anansi/mcp/data/<country>.json`
+1. Open `src/anansi/context/data/<country>.json`
 2. Make the correction
 3. Submit a pull request with a brief explanation
 

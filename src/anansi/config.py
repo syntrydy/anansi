@@ -6,6 +6,8 @@ Handles loading environment variables and configuring global settings.
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from anansi.core.constants import MODEL_OLLAMA_REASONING, MODEL_REASONING, MODEL_STANDARD
+
 
 class Settings(BaseSettings):
     """
@@ -18,11 +20,16 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    bfl_api_key: str = Field(default="", validation_alias="BFL_API_KEY")
     anthropic_api_key: str = Field(default="", validation_alias="ANTHROPIC_API_KEY")
+    openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
+    replicate_api_token: str = Field(default="", validation_alias="REPLICATE_API_TOKEN")
     anthropic_model: str = Field(
-        default="claude-3-5-haiku-20241022",
+        default=MODEL_STANDARD,
         validation_alias="ANTHROPIC_MODEL",
+    )
+    anthropic_model_reasoning: str = Field(
+        default=MODEL_REASONING,
+        validation_alias="ANTHROPIC_MODEL_REASONING",
     )
     use_local_llm: bool = Field(default=False, validation_alias="USE_LOCAL")
     ollama_url: str = Field(
@@ -30,6 +37,10 @@ class Settings(BaseSettings):
         validation_alias="OLLAMA_URL",
     )
     ollama_model: str = Field(default="llama3.2", validation_alias="OLLAMA_MODEL")
+    ollama_model_reasoning: str = Field(
+        default=MODEL_OLLAMA_REASONING,
+        validation_alias="OLLAMA_MODEL_REASONING",
+    )
 
     @field_validator("use_local_llm", mode="before")
     @classmethod

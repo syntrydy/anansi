@@ -30,13 +30,13 @@ from anansi.observability.langfuse_pipeline import (
 
 async def node_concept(state: AnansiState) -> dict[str, Any]:
     with trace_pipeline_node("concept", state):
-        scenes = analyze_concept(state)
+        scenes = await analyze_concept(state)
         return {"scenes": [s.model_dump() for s in scenes]}
 
 
 async def node_localizer(state: AnansiState) -> dict[str, Any]:
     with trace_pipeline_node("localizer", state):
-        ctx = gather_context(state["country"])
+        ctx = await gather_context(state["country"])
         return {"context_pack": ctx.model_dump()}
 
 
@@ -44,7 +44,7 @@ async def node_scriptor(state: AnansiState) -> dict[str, Any]:
     with trace_pipeline_node("scriptor", state):
         scenes = [Scene(**s) for s in state["scenes"]]
         context = CountryData.model_validate(state.get("context_pack", {}))
-        scripts = write_script(state, scenes, context)
+        scripts = await write_script(state, scenes, context)
         return {"panel_scripts": [p.model_dump() for p in scripts]}
 
 
@@ -75,6 +75,8 @@ async def node_cartoon(state: AnansiState) -> dict[str, Any]:
                 scripts,
                 country=state["country"],
                 audience=audience,
+                language=state["language"],
+                aspect_ratio=state.get("aspect_ratio", "1:1"),
                 skip_panel_numbers=unsafe_pns,
             )
             return {"images": [img.model_dump() for img in images]}
@@ -106,7 +108,7 @@ async def node_synthesizer(state: AnansiState) -> dict[str, Any]:
         scripts = [PanelScript(**p) for p in state["panel_scripts"]]
         images = [GeneratedImage(**i) for i in state.get("images", [])]
         audios = [GeneratedAudio(**a) for a in state.get("audios", [])]
-        package = synthesize_output(state, scripts, images, audios, scenes)
+        package = await synthesize_output(state, scripts, images, audios, scenes)
         return {"package": package.model_dump(mode="json")}
 
 

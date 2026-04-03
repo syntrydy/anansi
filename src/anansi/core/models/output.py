@@ -27,6 +27,7 @@ class PanelOutput(BaseModel):
 class OutputPackage(BaseModel):
     """Aggregated lesson output."""
 
+    storyboard_image_url: str = ""  # single comic-strip image covering all panels
     scenes: list[Scene] = Field(default_factory=list)
     images: list[GeneratedImage] = Field(default_factory=list)
     audios: list[GeneratedAudio] = Field(default_factory=list)

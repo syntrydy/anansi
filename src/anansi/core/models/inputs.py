@@ -13,6 +13,7 @@ class TeacherInput(BaseModel):
     grade: int
     language: str
     audience: Audience = "general"
+    aspect_ratio: str = "1:1"
     extra_context: Dict[str, Any] = {}
 
     @field_validator("country")
