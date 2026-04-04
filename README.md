@@ -3,156 +3,136 @@
 > **AI-Powered Multimodal Education for African Classrooms**  
 > *Designed by SQUAD3 Wakanda*
 
-Anansi transforms any educational topic into a culturally accurate, multilingual cartoon teaching package — complete with narration audio, printable PDF, and a teacher guide. Built specifically for African classrooms, every name, place, food, and landscape detail is drawn from the selected country's cultural context.
+Anansi turns a lesson topic into a culturally grounded teaching package: multi-panel cartoon art, optional narration audio, a printable **comic-style PDF**, a bundled **audio ZIP** download, and a markdown teacher guide. Names, places, and visual cues come from the selected country’s context pack.
 
-Named after Anansi, the Akan spider deity and keeper of all stories and knowledge in West African folklore.
+Named after Anansi, the Akan spider deity and keeper of stories in West African folklore.
 
 ---
 
 ## What it does
 
-A teacher provides three inputs:
+A teacher provides:
 
-```
-Topic:    Photosynthesis
-Country:  Kenya
-Grade:    Grade 5
-Language: Swahili
-```
+| Input | Example |
+|--------|---------|
+| Topic | Photosynthesis |
+| Country | Kenya |
+| Grade | 5 |
+| Language | English, Swahili, … |
+| Audience | kid · adult · general |
+| Aspect ratio | 1:1, 16:9, 4:3 |
 
-Anansi produces a complete teaching package:
+Anansi returns an **output package** you can use in class:
 
-- **Multi-panel cartoon** — culturally accurate illustrations (Kamau and Achieng near the Tana River, not John and Sarah in a generic suburb)
-- **Panel-by-panel audio narration** — in the selected language via Google Cloud TTS
-- **Printable PDF** — A4, low-ink mode for classroom printing
-- **Projector view** — high-contrast for display
-- **Discussion cards** — cut-out panels for group activity
-- **Teacher guide** — vocabulary list, comprehension questions, lesson plan
+- **Storyboard image** — single strip-style visual for the lesson (when generated)
+- **Panels** — per-panel caption, dialogue, narration, image URL, and optional MP3
+- **Teacher guide** — supporting notes (markdown)
+- **Comic PDF export** — image-first pages, caption / dialogue / narration typography; no audio URLs or technical noise in the file
+- **Download all audio** — ZIP of valid panel MP3s via the API (`panel_1.mp3`, …)
+- **Teacher feedback** — optional rating after a run (API)
 
 ---
 
 ## Architecture
 
-Anansi is a **7-node LangGraph stateful agent** with a FastMCP cultural context server, Streamlit teacher UI, and Langfuse observability.
+The default experience is a **React (Vite) frontend** talking to a **FastAPI** backend. The backend runs the **LangGraph** pipeline, streams progress over **SSE**, and serves PDF and audio ZIP exports. **FastMCP** cultural tools run **in-process** (no separate MCP process required for a normal lesson run).
 
 ```
-Teacher Input (Topic · Country · Grade · Language)
+React UI (Vite, :5173)
+        │  HTTP /api/v1
+        ▼
+FastAPI — jobs, SSE stream, PDF, audio ZIP
         │
         ▼
-┌───────────────────────────────────────────────────────┐
-│                  LangGraph Agent Graph                │
-│                                                       │
-│  N1 Concept Analyzer → N2 Localizer → N3 Scriptor    │
-│                              │              │         │
-│                    FastMCP   │    ┌──────── ┘         │
-│                    Context   │    │                   │
-│                    Server    │    ├── N4 Cartoon Gen  │
-│                              │    │   (FLUX Kontext)  │
-│                              │    │                   │
-│                              │    ├── N5 Safety Check │
-│                              │    │   (Claude Haiku)  │
-│                              │    │                   │
-│                              │    └── N6 Narrator     │
-│                              │        (Google TTS)    │
-│                              │              │         │
-│                              └──── N7 Synthesizer ───┘│
-└───────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    LangGraph (AnansiState)                  │
+│                                                             │
+│  concept → localizer → scriptor → safety ──┬── cartoon      │
+│         (MCP tools in-process)              └── narrator    │
+│                                    cartoon ──┐              │
+│                                    narrator ─┴→ synthesizer │
+└─────────────────────────────────────────────────────────────┘
         │
         ▼
-Output: Panels · Audio · PDF · Teacher Guide
+OutputPackage → UI, PDF builder, audio ZIP builder
 
-              ↕ All nodes traced via Langfuse
+Optional: Streamlit UI (`src/anansi/ui/app.py`) for the same pipeline-style workflow without the SPA.
 ```
 
-Nodes 4, 5, and 6 run **in parallel** after Node 3 completes — image generation, safety checking, and audio narration are produced simultaneously.
+After **scriptor**, **safety** runs once. **Cartoon** (images) and **narrator** (audio) run **in parallel**, then **synthesizer** merges everything into `OutputPackage`. Traces can be sent to **Langfuse** when keys are configured.
 
 ---
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology | Role |
-|-------|-----------|------|
-| UI | Streamlit | Teacher input form, live progress, panel viewer, audio, download |
-| Agent core | LangGraph | 7-node stateful graph, parallel branches, shared TypedDict state |
-| Context server | FastMCP (Python) | 5 MCP tools returning per-country cultural context packs |
-| Image generation | FLUX.1 Kontext Pro (Vyro AI) | Multi-panel cartoon generation with character consistency |
-| Audio narration | Google Cloud TTS | Panel-by-panel narration in local African languages |
-| Observability | Langfuse | Full trace, prompt analytics, cost and latency per node |
-| Validation | Pydantic | Structured outputs at every node boundary |
-| Content safety | LLM-as-judge (Claude Haiku) | African-context-aware age and cultural appropriateness check |
+|-------|------------|------|
+| Primary UI | React 19 + Vite + TypeScript | Lesson form, pipeline stepper, results, PDF link, audio ZIP download, feedback |
+| API | FastAPI + Uvicorn | `POST /lessons`, `GET /lessons/{id}`, SSE stream, PDF + ZIP exports |
+| Legacy UI | Streamlit | Alternate teacher UI (same domain concepts) |
+| Agent | LangGraph | Stateful graph, async nodes, optional per-step streaming |
+| Context | FastMCP (Python) | Five tools; loaded **in-process** from `context.server` |
+| Images | Replicate — FLUX Schnell | Panel cartoons (`REPLICATE_API_TOKEN`) |
+| Audio | OpenAI TTS (optional) | MP3 per panel when `OPENAI_API_KEY` is set |
+| Text LLM | Anthropic Claude (or Ollama) | Concept, script, safety, etc. via `config.Settings` |
+| Config | Pydantic Settings | `.env` → `anansi.config` (no ad-hoc `os.getenv` in business logic) |
+| Observability | Langfuse (optional) | Pipeline tracing |
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 anansi/
-├── src/
-│   └── anansi/
-│       ├── agent/
-│       │   ├── graph.py          # LangGraph graph definition
-│       │   ├── safety.py         # Node 5 — LLM-as-judge content check
-│       │   └── nodes/
-│       │       ├── concept.py    # Node 1 — Concept Analyzer
-│       │       ├── localizer.py  # Node 2 — Localizer (calls MCP)
-│       │       ├── scriptor.py   # Node 3 — Scriptor
-│       │       ├── cartoon.py    # Node 4 — Cartoon Generator
-│       │       ├── narrator.py   # Node 6 — Narrator
-│       │       └── synthesizer.py # Node 7 — Synthesizer
-│       ├── context/
-│       │   ├── server.py         # FastMCP server entry point
-│       │   ├── tools.py          # @mcp.tool() definitions
-│       │   ├── repository.py     # ContextRepository singleton
-│       │   └── data/             # Country JSON context packs
-│       │       ├── kenya.json
-│       │       ├── nigeria.json
-│       │       ├── senegal.json
-│       │       ├── ghana.json
-│       │       └── cameroon.json
-│       ├── core/
-│       │   └── models/
-│       │       ├── inputs.py     # TeacherInput Pydantic model
-│       │       ├── outputs.py    # All output Pydantic models
-│       │       ├── state.py      # TypedDict AnansiState
-│       │       └── context.py    # CountryData model
-│       ├── infrastructure/
-│       │   ├── llm.py            # LLM factory — cloud or Ollama
-│       │   ├── image.py          # Vyro AI image generation
-│       │   ├── audio.py          # Google Cloud TTS
-│       │   └── observability.py  # Langfuse handler
-│       ├── config.py             # Pydantic settings (env vars)
-│       └── ui/
-│           └── app.py            # Streamlit application
+├── frontend/                 # React + Vite app (proxies /api → backend)
+├── src/anansi/
+│   ├── agent/
+│   │   ├── graph.py        # LangGraph definition and run_pipeline
+│   │   ├── safety.py       # LLM-as-judge content check
+│   │   └── nodes/          # concept, localizer, scriptor, cartoon, narrator, synthesizer
+│   ├── api/
+│   │   ├── main.py         # FastAPI app, CORS, lifespan
+│   │   ├── router.py       # REST + SSE + PDF + audio ZIP
+│   │   ├── store.py        # In-memory job store
+│   │   ├── streaming.py    # SSE snapshot stream
+│   │   ├── schemas.py      # Request/response models
+│   │   └── export_audio_zip.py
+│   ├── context/            # FastMCP server + JSON country packs
+│   ├── core/models/        # Pydantic models (state, inputs, output, …)
+│   ├── infrastructure/   # llm, image (Replicate), audio (OpenAI)
+│   ├── observability/      # Langfuse pipeline helpers
+│   ├── config.py           # Settings
+│   └── ui/                 # Streamlit app + components (e.g. export_pdf.py)
 ├── tests/
-│   ├── unit/
-│   └── integration/
 ├── .env.example
-├── pyproject.toml        # uv project config and dependencies
-├── uv.lock               # locked dependency versions
+├── pyproject.toml          # uv / dependencies
+├── uv.lock
 └── README.md
 ```
 
 ---
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) — dependency management
-- API keys: Anthropic, Vyro AI, Google Cloud, Langfuse
+- **Python 3.11+**
+- **[uv](https://docs.astral.sh/uv/)** for Python deps
+- **Node.js 20+** and npm (for the React UI)
+- API keys as needed: **Anthropic** (required for cloud LLM), **Replicate** (images), **OpenAI** (optional TTS)
 
-### Installation
+### Install
 
 ```bash
 git clone https://github.com/squad3wakanda/anansi
 cd anansi
 
-# Install uv if you don't have it
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Create virtual environment and install dependencies
+# Python environment
+curl -LsSf https://astral.sh/uv/install.sh | sh   # if needed
 uv sync
+
+# Frontend dependencies
+cd frontend && npm install && cd ..
 ```
 
 ### Configuration
@@ -161,272 +141,153 @@ uv sync
 cp .env.example .env
 ```
 
-Edit `.env`:
+Edit `.env` — at minimum set **`ANTHROPIC_API_KEY`** and **`REPLICATE_API_TOKEN`**. Set **`OPENAI_API_KEY`** if you want narration audio. Langfuse keys are optional.
 
-```env
-# LLM
-ANTHROPIC_API_KEY=sk-ant-...
+See `.env.example` for the full list (`USE_LOCAL`, `OLLAMA_URL`, MCP transport, etc.).
 
-# Image generation (Vyro AI)
-BFL_API_KEY=...
+### Run the app (recommended)
 
-# Audio
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
-
-# Observability
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_SECRET_KEY=sk-lf-...
-LANGFUSE_HOST=https://cloud.langfuse.com
-
-# Offline mode (Phase 3)
-USE_LOCAL=false
-USE_LOCAL_IMAGE=false
-USE_LOCAL_AUDIO=false
-OLLAMA_URL=http://localhost:11434
-```
-
-### Run
+**Terminal 1 — API (port 8000)**
 
 ```bash
-# Start the FastMCP cultural context server
-uv run python -m anansi.context.server
+cd anansi
+uv run uvicorn anansi.api.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-# In a separate terminal, start the Streamlit UI
+**Terminal 2 — React UI (port 5173)**
+
+```bash
+cd anansi/frontend
+npm run dev
+```
+
+Open **http://localhost:5173**. The Vite dev server proxies **`/api`** to the FastAPI app.
+
+### Run Streamlit (optional)
+
+```bash
 uv run streamlit run src/anansi/ui/app.py
 ```
 
-Open [http://localhost:8501](http://localhost:8501) in your browser.
+Opens **http://localhost:8501**. Uses the same Python package; PDF export uses `export_pdf.py` from this UI path as well.
+
+### Makefile shortcuts
+
+```bash
+make install    # uv sync
+make run-ui     # Streamlit
+make test-all   # pytest
+make lint       # ruff check
+```
 
 ---
 
-## The FastMCP Cultural Context Server
+## HTTP API (overview)
 
-The FastMCP server exposes 5 tools called by the Localizer node (Node 2):
+All routes are under **`/api/v1`**.
 
-| Tool | Returns | Example (Kenya) |
-|------|---------|-----------------|
-| `get_names(country)` | Male and female first names | Kamau, Otieno, Achieng, Wanjiru |
-| `get_places(country)` | Cities, rivers, landmarks | Kisumu, Tana River, Mount Kenya |
-| `get_culture(country)` | Food, clothing, housing, transport, animals | Ugali, kanga, mabati roof, matatu, zebu |
-| `get_language(country)` | Languages and TTS code | English, Swahili, sw-KE |
-| `get_avoids(country)` | Things NOT to show | Snow, oak trees, dollars, subway |
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/lessons` | Create a lesson job (`LessonRequest` JSON) → `job_id` |
+| GET | `/lessons/{job_id}` | Poll status and `result` (`OutputPackage`) |
+| GET | `/lessons/{job_id}/stream` | SSE: pipeline snapshots until done/error |
+| GET | `/lessons/{job_id}/pdf` | Comic-style PDF download |
+| GET | `/lessons/{job_id}/export/audio` | ZIP of panel MP3s (skips bad URLs; 404 if none) |
+| POST | `/lessons/{job_id}/feedback` | Teacher feedback |
+| GET | `/meta/countries` | Countries, languages, audiences, aspect ratios |
+
+OpenAPI docs: **http://localhost:8000/docs** (when the API is running).
+
+---
+
+## FastMCP cultural context
+
+The **localizer** node calls five tools (names, places, culture, language, avoids) through a **FastMCP** app defined in `src/anansi/context/server.py`. In production runs this is **in-process** via `fastmcp.Client(mcp)` — you do **not** need `python -m anansi.context.server` unless you are debugging or exposing MCP over stdio/HTTP separately.
 
 ### Adding a new country
 
-Create a new JSON file in `src/anansi/context/data/`:
-
-```json
-{
-  "country": "Ethiopia",
-  "languages": {
-    "official": "Amharic",
-    "local": ["Amharic", "Oromo", "Tigrinya"],
-    "tts_code": "am-ET"
-  },
-  "names": {
-    "male": ["Abebe", "Tadesse", "Girma", "Haile", "Tesfaye"],
-    "female": ["Tigist", "Selam", "Meron", "Hiwot", "Bethlehem"]
-  },
-  "places": {
-    "cities": ["Addis Ababa", "Dire Dawa", "Gondar", "Hawassa"],
-    "rivers": ["Blue Nile", "Awash River", "Omo River"],
-    "landmarks": ["Simien Mountains", "Danakil Depression", "Lake Tana"]
-  },
-  "culture": {
-    "food": ["injera", "wat", "teff bread", "tej"],
-    "clothing": ["habesha kemis", "netela"],
-    "housing": ["tukul", "stone house"],
-    "transport": ["bajaj", "minibus", "donkey"],
-    "animals": ["Ethiopian wolf", "gelada baboon", "zebu"]
-  },
-  "art_style_cues": "Ethiopian highlands, terraced farms, eucalyptus trees, stone churches",
-  "avoids": ["snow in lowlands", "Western fast food", "dollars", "oak trees"]
-}
-```
-
-No code changes required — the FastMCP server picks up new country files automatically.
-
----
-
-## Offline Mode (Phase 3)
-
-All text LLM nodes can be swapped to Ollama with a single environment variable. No graph code changes required.
+Add a JSON file under `src/anansi/context/data/` (see existing packs). Validate with:
 
 ```bash
-# Switch to local models
-USE_LOCAL=true
-OLLAMA_URL=http://localhost:11434
-```
-
-```python
-# config.py — the factory handles everything
-def get_llm(capability: str = 'standard'):
-    if os.getenv('USE_LOCAL') == 'true':
-        return ChatOllama(model='llama3.2', base_url=os.getenv('OLLAMA_URL'))
-    if capability == 'reasoning':
-        return ChatAnthropic(model='claude-sonnet-4-6')
-    return ChatAnthropic(model='claude-haiku-4-5-20261001')
-```
-
-| Component | Phase 1 (Cloud) | Phase 3 (Offline) |
-|-----------|----------------|-------------------|
-| Text LLMs | Claude Haiku / Sonnet | Ollama (Llama 3.2 / Mistral) |
-| Image gen | FLUX Kontext Pro | Stable Diffusion 3.5 (local) |
-| Audio | Google Cloud TTS | Kokoro TTS (Ollama) |
-| FastMCP | Python process | Same — no change |
-
-**Minimum hardware for full offline**: 16 GB RAM, GPU with 6 GB VRAM (e.g. NVIDIA GTX 1660).
-
----
-
-## Structured Outputs
-
-Every LLM node returns a validated Pydantic model. Nothing flows between nodes as unstructured text.
-
-```python
-# Node 1 output
-class Scene(BaseModel):
-    panel_number: int
-    description: str
-    key_concept: str
-    characters: List[str]
-    setting: str
-
-# Node 2 output
-class ContextPack(BaseModel):
-    language: str
-    character_names: List[str]
-    place_names: List[str]
-    cultural_elements: CultureElements
-    avoids: List[str]
-    art_style_cues: str
-
-# Node 3 output
-class PanelScript(BaseModel):
-    panel_number: int
-    caption: str           # Max 20 words
-    dialogue: List[dict]   # [{character, line}]
-    image_prompt: str      # Full FLUX prompt
-    narration_text: str    # Text for TTS
+make validate-data
 ```
 
 ---
 
-## Content Safety
+## Offline / local LLM mode
 
-Anansi uses an **LLM-as-judge** approach rather than generic content filters. The safety check is explicitly African-context-aware — traditional farming, local food, cultural dress, and regional customs are never flagged.
+Set **`USE_LOCAL=true`** and configure **`OLLAMA_URL`** / **`OLLAMA_MODEL`** in `.env`. The LLM factory in `src/anansi/infrastructure/llm.py` switches text generation to Ollama when enabled (see **`anansi.config.Settings`**). Image and audio still use their respective cloud keys unless you extend the project for local media.
 
-```python
-SAFETY_PROMPT = """
-You are a content reviewer for African primary school educational materials.
-Review this panel script for Grade {grade} students in {country}.
+---
 
-Traditional farming, local food, cultural clothing, and regional customs
-are ALWAYS appropriate.
+## Structured outputs
 
-Check for:
-- Age-appropriate language and scenes
-- Cultural respect and accuracy  
-- Educational accuracy for the topic
+Panels and state boundaries use **Pydantic** models (e.g. `PanelScript`, `CountryData`, `OutputPackage`). The graph state is the **`AnansiState`** TypedDict; the final **`OutputPackage`** is what the UI and exporters consume.
 
-Return: {appropriate: bool, issues: List[str], suggestions: List[str]}
-"""
-```
+---
+
+## Content safety
+
+Anansi uses an **LLM-as-judge** step tuned for educational material in African contexts: local dress, food, and customs are treated as appropriate unless genuinely unsafe or misleading. Unsafe panels can be omitted from image/audio generation and are handled explicitly in the comic PDF when included.
 
 ---
 
 ## Observability
 
-All requests are fully traced in Langfuse. One callback handler, zero instrumentation code inside nodes.
-
-```python
-from langfuse.callback import CallbackHandler
-
-langfuse_handler = CallbackHandler(
-    public_key=os.getenv('LANGFUSE_PUBLIC_KEY'),
-    secret_key=os.getenv('LANGFUSE_SECRET_KEY'),
-)
-
-result = graph.invoke(state, config={'callbacks': [langfuse_handler]})
-```
-
-**Key metrics tracked:**
-- Total latency per request (target: < 45s for 5 panels)
-- Cost per request by country and grade
-- Image generation failure rate by country
-- MCP tool call success rate (cultural data coverage)
-- Safety check flag rate
-- Teacher feedback rate
+When Langfuse env vars are set, pipeline nodes are traced (see `src/anansi/observability/langfuse_pipeline.py`). Useful metrics include end-to-end latency, safety flag rate, and per-request cost estimates from your provider dashboards.
 
 ---
 
-## Estimated Cost per Request
+## Estimated cost per lesson (order of magnitude)
 
-| Component | Model | Est. cost |
-|-----------|-------|-----------|
-| Text nodes (×4) | Claude Haiku | ~$0.02 |
-| Image generation (×5 panels) | FLUX Kontext Pro | ~$0.20 |
-| Audio narration | Google Cloud TTS | ~$0.02 |
-| MCP tool calls | Local FastMCP | $0.00 |
-| **Total** | | **~$0.24** |
+Costs depend on panel count, model choice, and provider pricing. A rough cloud baseline:
+
+| Component | Notes |
+|-----------|--------|
+| Text (concept, localize, script, safety, …) | Claude Haiku-class usage |
+| Images | Replicate FLUX Schnell per panel |
+| Audio | OpenAI TTS per panel (if enabled) |
+| MCP + API | No extra vendor cost |
+
+Treat numbers as **indicative**; monitor spend in Anthropic, Replicate, and OpenAI consoles.
 
 ---
 
-## Supported Countries (Phase 1)
+## Supported countries (Phase 1)
 
-| Country | Languages | Status |
-|---------|-----------|--------|
-| Kenya | English, Swahili | ✅ Ready |
-| Nigeria | English, Yoruba, Hausa, Igbo | ✅ Ready |
-| Senegal | French, Wolof | ✅ Ready |
-| Ghana | English, Twi | ✅ Ready |
-| Cameroon | French, English | ✅ Ready |
+| Country | Status |
+|---------|--------|
+| Kenya, Nigeria, Senegal, Ghana, Cameroon | Context packs in repo |
 
-More countries are added in Phase 2 based on usage data. See [Adding a new country](#adding-a-new-country).
+More countries: add JSON under `context/data/` and wire into supported-country constants if needed.
 
 ---
 
 ## Roadmap
 
 ### Phase 1 — Cloud MVP
-- [x] Architecture design
-- [x] LangGraph graph implementation (all 7 nodes)
-- [x] FastMCP context server with 5 pilot country packs
-- [x] Streamlit UI with all output formats
-- [x] Langfuse observability
+- [x] LangGraph pipeline (concept → … → synthesizer)
+- [x] FastMCP context tools (in-process)
+- [x] React + FastAPI + SSE teacher flow
+- [x] Comic-style PDF + audio ZIP export
+- [x] Streamlit UI (parallel path)
 - [x] Content safety (LLM-as-judge)
-- [ ] Teacher feedback loop
+- [ ] Teacher feedback analytics loop
 
 ### Phase 2 — Scale
-- [ ] 15+ countries from usage patterns
-- [ ] Curriculum alignment from teacher feedback data
-- [ ] Region-level context packs
-- [ ] SQLite backend for FastMCP
-- [ ] Teacher correction submissions
+- [ ] More countries and curriculum alignment
+- [ ] Durable job store / auth for multi-teacher deployments
 
-### Phase 3 — Offline Infrastructure
-- [ ] Ollama integration (tested from Phase 1 via USE_LOCAL flag)
-- [ ] Stable Diffusion self-hosted
-- [ ] Kokoro TTS offline
-- [ ] School deployment guide
+### Phase 3 — Offline
+- [ ] Deeper Ollama + local image/audio paths for air-gapped schools
 
 ---
 
 ## Contributing
 
-### Adding a country
-See [Adding a new country](#adding-a-new-country) — just a JSON file, no code changes.
-
-### Correcting cultural data
-If you spot a wrong name, place, or cultural detail:
-1. Open `src/anansi/context/data/<country>.json`
-2. Make the correction
-3. Submit a pull request with a brief explanation
-
-### Running tests
-```bash
-uv run pytest tests/
-```
+- **Countries:** add or edit `src/anansi/context/data/<country>.json`, run `make validate-data`.
+- **Tests:** `uv run pytest tests/`
+- **Lint / format:** `make lint`, `make format` (Ruff); frontend: `cd frontend && npm run lint`
 
 ---
 
@@ -438,9 +299,7 @@ MIT — see LICENSE.
 
 ## About the name
 
-Anansi is the spider deity from Akan and West African folklore — the keeper of all stories and wisdom in the world. According to legend, all stories belong to Anansi because he outwitted the Sky God to earn them.
-
-A tool that weaves concepts into visual narratives for African children could have no more fitting a name.
+Anansi is the spider figure from Akan and West African folklore — the keeper of stories and wisdom. A tool that weaves lessons into visual narratives for African learners fits that spirit.
 
 ---
 

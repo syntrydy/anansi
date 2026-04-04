@@ -189,6 +189,10 @@ if st.session_state.result:
     )
     build_id = int(st.session_state.get("pdf_build_id", 0))
     _last = st.session_state.get("last_input") or {}
+    _pdf_img_cache = cast(
+        dict[str, str],
+        st.session_state.setdefault("pdf_image_cache", {}),
+    )
     export_pdf(
         cast(dict[str, Any], st.session_state.result),
         exclude_unsafe=exclude_unsafe,
@@ -196,6 +200,7 @@ if st.session_state.result:
         topic=str(_last.get("topic", "")),
         country=str(_last.get("country", "")),
         grade=str(_last.get("grade", "")),
+        shared_image_cache=_pdf_img_cache,
     )
 
     with st.expander("Teacher Guide"):

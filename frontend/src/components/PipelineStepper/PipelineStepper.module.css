@@ -1,9 +1,72 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.statusRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.statusIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--color-accent);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.statusText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.statusTitle {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-subtle);
+}
+
+.statusMessage {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.35;
+  transition: opacity var(--transition-smooth);
+}
+
+.progressTrack {
+  height: 6px;
+  background: var(--color-card-bg);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), #818cf8);
+  border-radius: 999px;
+  transition: width 0.45s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
 .stepper {
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 1.25rem 0;
+  padding-top: var(--space-2);
   overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .step {
@@ -13,46 +76,44 @@
 }
 
 .dot {
-  width: 2rem;
-  height: 2rem;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--color-card-bg);
-  border: 2px solid var(--color-brand-light);
+  border: 2px solid var(--color-border-strong);
   color: var(--color-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background var(--transition-smooth),
+    border-color var(--transition-smooth),
+    color var(--transition-smooth);
 }
 
 .done {
-  background: var(--color-success);
+  background: var(--color-success-bg);
   border-color: var(--color-success);
-  color: var(--color-white);
+  color: var(--color-success);
 }
 
 .active {
-  background: var(--color-brand);
-  border-color: var(--color-brand);
-  color: var(--color-white);
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(158, 61, 0, 0.4); }
-  50%       { box-shadow: 0 0 0 6px rgba(158, 61, 0, 0); }
+  background: var(--color-accent-muted);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  animation: pulseRing 1.5s ease-in-out infinite;
 }
 
 .stepLabel {
-  font-size: 0.72rem;
+  font-size: 0.625rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--color-text-muted);
-  margin-left: 0.4rem;
+  margin-left: var(--space-2);
   white-space: nowrap;
 }
 
@@ -61,14 +122,24 @@
 }
 
 .connector {
-  width: 2.5rem;
+  width: 20px;
   height: 2px;
-  background: var(--color-brand-light);
-  margin: 0 0.25rem;
+  background: var(--color-border);
+  margin: 0 var(--space-1);
   flex-shrink: 0;
-  transition: background 0.2s;
+  transition: background var(--transition-smooth);
 }
 
 .connectorDone {
   background: var(--color-success);
+}
+
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(79, 70, 229, 0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }

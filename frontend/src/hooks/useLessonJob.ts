@@ -8,6 +8,7 @@ interface UseLessonJobResult {
   status: JobStatus
   result: OutputPackage | null
   error: string | null
+  lastRequest: LessonRequest | null
   snapshots: ReturnType<typeof usePipelineStream>['snapshots']
   submit: (req: LessonRequest) => Promise<void>
   reset: () => void
@@ -18,6 +19,7 @@ export function useLessonJob(): UseLessonJobResult {
   const [status, setStatus] = useState<JobStatus>('idle')
   const [result, setResult] = useState<OutputPackage | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [lastRequest, setLastRequest] = useState<LessonRequest | null>(null)
 
   const { snapshots, close } = usePipelineStream(status === 'running' ? jobId : null)
 
@@ -48,6 +50,7 @@ export function useLessonJob(): UseLessonJobResult {
 
   const submit = async (req: LessonRequest) => {
     close()
+    setLastRequest(req)
     setStatus('running')
     setResult(null)
     setError(null)
@@ -69,7 +72,8 @@ export function useLessonJob(): UseLessonJobResult {
     setStatus('idle')
     setResult(null)
     setError(null)
+    setLastRequest(null)
   }
 
-  return { jobId, status, result, error, snapshots, submit, reset }
+  return { jobId, status, result, error, lastRequest, snapshots, submit, reset }
 }
