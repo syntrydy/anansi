@@ -8,7 +8,7 @@ from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import Response
 from sse_starlette.sse import EventSourceResponse
 
 from anansi.agent.graph import run_pipeline
@@ -19,12 +19,13 @@ from anansi.api.schemas import (
     LessonRequest,
     MetaResponse,
 )
+from anansi.api.export_audio_zip import build_audio_zip_bytes
 from anansi.api.store import job_store
 from anansi.api.streaming import sse_generator
 from anansi.core.constants import SUPPORTED_COUNTRIES
 from anansi.core.models.state import AnansiState, initialize_state
 from anansi.observability.feedback import log_feedback
-from anansi.ui.components.export_pdf import _build_filename, build_pdf_bytes
+from anansi.ui.components.export_pdf import _build_filename, build_pdf_bytes_async
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ async def _run_pipeline_job(job_id: str, initial: AnansiState) -> None:
             # Emit a single minimal snapshot then a package for local dev/testing
             import asyncio
 
-            mock_snap: AnansiState = {**initial, "scenes": [{"title": "Mock scene"}]}  # type: ignore[typeddict-item]
+            mock_snap: AnansiState = {**initial, "scenes": [{"title": "Mock scene"}]}
             record.snapshot_queue.put_nowait(mock_snap)
             await asyncio.sleep(0.05)
             mock_final: AnansiState = {
@@ -69,7 +70,7 @@ async def _run_pipeline_job(job_id: str, initial: AnansiState) -> None:
                     "safety_results": [],
                     "lesson_title": initial.get("topic", "Mock Lesson"),
                 },
-            }  # type: ignore[typeddict-item]
+            }
             record.snapshot_queue.put_nowait(mock_final)
             record.result = mock_final["package"]
             record.status = "done"
@@ -98,7 +99,7 @@ async def create_lesson(
 ) -> JobCreatedResponse:
     """Submit a lesson request; returns a job_id to stream progress via SSE."""
     job_id = str(uuid4())
-    record = job_store.create(job_id)
+    job_store.create(job_id)
     initial = initialize_state(body.model_dump())
     background_tasks.add_task(_run_pipeline_job, job_id, initial)
     return JobCreatedResponse(job_id=job_id)
@@ -157,12 +158,33 @@ async def download_pdf(
     if record.status != "done" or record.result is None:
         raise HTTPException(status_code=409, detail="Lesson not ready yet")
 
-    pdf_bytes = build_pdf_bytes(record.result, exclude_unsafe=exclude_unsafe)
+    pdf_bytes = await build_pdf_bytes_async(
+        record.result, exclude_unsafe=exclude_unsafe
+    )
     filename = _build_filename(topic, country, grade)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/lessons/{job_id}/export/audio")
+async def download_audio_zip(job_id: str) -> Response:
+    """Zip all panel audio files that can be fetched or read from disk."""
+    record = job_store.get(job_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
+    if record.status != "done" or record.result is None:
+        raise HTTPException(status_code=409, detail="Lesson not ready yet")
+    try:
+        zip_bytes = build_audio_zip_bytes(record.result)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": 'attachment; filename="lesson_audio.zip"'},
     )
 
 

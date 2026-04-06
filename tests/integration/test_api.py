@@ -8,7 +8,6 @@ are deterministic and fast regardless of env configuration.
 from __future__ import annotations
 
 import asyncio
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -223,6 +222,57 @@ class TestPdfEndpoint:
         assert resp.status_code == 200
         assert resp.headers["content-type"] == "application/pdf"
         assert resp.content[:4] == b"%PDF"
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/lessons/{job_id}/export/audio
+# ---------------------------------------------------------------------------
+
+
+class TestAudioZipEndpoint:
+    async def test_audio_zip_when_job_not_done_returns_409(self, client: AsyncClient) -> None:
+        from anansi.api.store import job_store
+
+        rec = job_store.create("test-audio-running")
+        rec.status = "running"
+        resp = await client.get("/api/v1/lessons/test-audio-running/export/audio")
+        assert resp.status_code == 409
+
+    async def test_audio_zip_nonexistent_job_returns_404(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/v1/lessons/ghost/export/audio")
+        assert resp.status_code == 404
+
+    async def test_audio_zip_no_audio_returns_404(self, client: AsyncClient) -> None:
+        from anansi.api.store import job_store
+
+        rec = job_store.create("test-audio-empty")
+        rec.status = "done"
+        rec.result = _MOCK_PACKAGE
+        resp = await client.get("/api/v1/lessons/test-audio-empty/export/audio")
+        assert resp.status_code == 404
+        assert "audio" in resp.json()["detail"].lower()
+
+    async def test_audio_zip_returns_zip_bytes(self, client: AsyncClient, tmp_path) -> None:
+        from anansi.api.store import job_store
+
+        mp3 = tmp_path / "clip.mp3"
+        mp3.write_bytes(b"fake-mp3-bytes")
+        pkg = {
+            **_MOCK_PACKAGE,
+            "panels": [
+                {
+                    **_MOCK_PACKAGE["panels"][0],
+                    "audio_url": str(mp3),
+                }
+            ],
+        }
+        rec = job_store.create("test-audio-ok")
+        rec.status = "done"
+        rec.result = pkg
+        resp = await client.get("/api/v1/lessons/test-audio-ok/export/audio")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "application/zip"
+        assert resp.content[:2] == b"PK"
 
 
 # ---------------------------------------------------------------------------

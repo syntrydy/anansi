@@ -36,5 +36,25 @@ export const api = {
   pdfUrl: (jobId: string, excludeUnsafe = true) =>
     `${BASE}/lessons/${jobId}/pdf?exclude_unsafe=${excludeUnsafe}`,
 
+  /** Binary ZIP of panel audio; throws with a readable message on failure. */
+  async fetchAudioZip(jobId: string): Promise<Blob> {
+    const resp = await fetch(`${BASE}/lessons/${jobId}/export/audio`)
+    if (!resp.ok) {
+      let detail = await resp.text().catch(() => resp.statusText)
+      try {
+        const data = JSON.parse(detail) as { detail?: string | string[] }
+        if (typeof data.detail === 'string') {
+          detail = data.detail
+        } else if (Array.isArray(data.detail)) {
+          detail = data.detail.map(String).join(', ')
+        }
+      } catch {
+        /* keep detail as text */
+      }
+      throw new Error(detail || `API ${resp.status}`)
+    }
+    return resp.blob()
+  },
+
   getMeta: () => request<MetaResponse>('/meta/countries'),
 }

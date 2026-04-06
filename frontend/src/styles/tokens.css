@@ -1,26 +1,56 @@
-/* Anansi design system — mirrors styles.py palette */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Inter:wght@400;600;700&display=swap');
+/* Anansi design system — spacing scale + typography + surfaces */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Spacing scale (px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+
+  /* Brand (warm) — headers, accents */
   --color-brand:        #9e3d00;
   --color-brand-dark:   #351000;
   --color-brand-mid:    #c64f00;
   --color-brand-light:  #e0c0b2;
-  --color-bg:           #faf9f8;
-  --color-card-bg:      #f4f3f2;
-  --color-text:         #1a1c1c;
-  --color-text-muted:   #594238;
-  --color-error:        #93000a;
-  --color-error-bg:     #ffdad6;
-  --color-success:      #1b6d24;
-  --color-success-bg:   #d6f0d9;
+
+  /* Product accent (AI / primary actions) */
+  --color-accent:       #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-muted: rgba(79, 70, 229, 0.12);
+
+  --color-bg:           #f4f4f5;
+  --color-surface:      #ffffff;
+  --color-card-bg:      #fafafa;
+  --color-border:       #e4e4e7;
+  --color-border-strong:#d4d4d8;
+  --color-text:         #18181b;
+  --color-text-muted:   #71717a;
+  --color-text-subtle:  #a1a1aa;
+
+  --color-error:        #b91c1c;
+  --color-error-bg:     #fef2f2;
+  --color-success:      #15803d;
+  --color-success-bg:   #f0fdf4;
   --color-white:        #ffffff;
 
-  --radius:             0.75rem;
-  --shadow:             0 2px 8px rgba(0,0,0,0.08);
+  --radius-sm:          8px;
+  --radius:             12px;
+  --radius-xl:          12px;
+  --radius-2xl:         16px;
 
-  --font-heading:       'Manrope', sans-serif;
-  --font-body:          'Inter', sans-serif;
+  --shadow-sm:          0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow:             0 4px 24px rgba(0, 0, 0, 0.06);
+  --shadow-md:          0 8px 32px rgba(0, 0, 0, 0.08);
+
+  --font-heading:       'Manrope', system-ui, sans-serif;
+  --font-body:          'Inter', system-ui, sans-serif;
+
+  --sidebar-width:      400px;
+  --input-height:       44px;
+  --transition-fast:    0.15s ease;
+  --transition-smooth:  0.2s ease;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -30,6 +60,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }

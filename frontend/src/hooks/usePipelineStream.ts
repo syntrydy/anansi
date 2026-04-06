@@ -22,6 +22,8 @@ export function usePipelineStream(jobId: string | null): UsePipelineStreamResult
 
   useEffect(() => {
     if (!jobId) return
+    /* New job: drop stale snapshots before opening EventSource. */
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when jobId changes
     setSnapshots([])
     retryRef.current = 0
 
