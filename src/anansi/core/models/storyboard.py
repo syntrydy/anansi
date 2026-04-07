@@ -28,5 +28,5 @@ class StoryboardOutput(BaseModel):
     """Structured output returned by N1 (Claude Sonnet via with_structured_output)."""
 
     title: str = Field(description="Lesson title")
-    scenes: list[Scene] = Field(description="4-6 sequential visual scenes")
+    scenes: list[Scene] = Field(description="exactly 6 sequential visual scenes")
     total_panels: int = Field(description="Total number of panels (== len(scenes))")

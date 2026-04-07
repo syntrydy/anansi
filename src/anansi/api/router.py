@@ -80,6 +80,13 @@ async def _run_pipeline_job(job_id: str, initial: AnansiState) -> None:
 
             final = await run_pipeline(initial, on_state_update=on_update)
             record.result = final.get("package")
+            # Rewrite local file paths → HTTP API URLs the browser can load
+            if record.result:
+                for panel in record.result.get("panels", []):
+                    url = panel.get("audio_url", "")
+                    if url and not url.startswith("http") and not url.startswith("/api"):
+                        pn = panel["panel_number"]
+                        panel["audio_url"] = f"/api/v1/lessons/{job_id}/panels/{pn}/audio"
             record.status = "done"
     except Exception as exc:
         logger.exception("Pipeline failed for job %s", job_id)
@@ -169,6 +176,31 @@ async def download_pdf(
     )
 
 
+@router.get("/lessons/{job_id}/panels/{panel_number}/audio")
+async def get_panel_audio(job_id: str, panel_number: int) -> Response:
+    """Stream a single panel's MP3 audio file."""
+    from pathlib import Path
+    record = job_store.get(job_id)
+    if record is None or record.result is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    panels = record.result.get("panels", [])
+    panel = next((p for p in panels if p["panel_number"] == panel_number), None)
+    if panel is None:
+        raise HTTPException(status_code=404, detail="Panel not found")
+    # The narrator stores the original file path before we rewrote it;
+    # reconstruct the path from the known pattern.
+    import os
+    audio_dir = Path(os.getenv("AUDIO_OUTPUT_DIR", "/tmp"))
+    file_path = audio_dir / f"panel_{panel_number}.mp3"
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Audio file not found")
+    return Response(
+        content=file_path.read_bytes(),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": f'inline; filename="panel_{panel_number}.mp3"'},
+    )
+
+
 @router.get("/lessons/{job_id}/export/audio")
 async def download_audio_zip(job_id: str) -> Response:
     """Zip all panel audio files that can be fetched or read from disk."""
@@ -188,12 +220,26 @@ async def download_audio_zip(job_id: str) -> Response:
     )
 
 
+def _load_grade_levels() -> dict[str, list[dict[str, object]]]:
+    """Load grade_levels from each country JSON pack."""
+    import json
+    from anansi.core.constants import DATA_DIR
+    result: dict[str, list[dict[str, object]]] = {}
+    for country in SUPPORTED_COUNTRIES:
+        path = DATA_DIR / f"{country.lower()}.json"
+        try:
+            pack = json.loads(path.read_text(encoding="utf-8"))
+            result[country] = pack.get("grade_levels", [])
+        except Exception:
+            result[country] = []
+    return result
+
+
 @router.get("/meta/countries", response_model=MetaResponse)
 async def get_meta() -> MetaResponse:
     """Return enumerable values for form dropdowns."""
     return MetaResponse(
         countries=sorted(SUPPORTED_COUNTRIES),
         languages=["English", "Swahili", "French"],
-        audiences=["kid", "adult", "general"],
-        aspect_ratios=["1:1", "16:9", "4:3"],
+        grade_levels=_load_grade_levels(),
     )

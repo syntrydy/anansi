@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { api } from '../../api/client'
-import type { LessonRequest, MetaResponse } from '../../api/types'
+import type { GradeLevel, LessonRequest, MetaResponse } from '../../api/types'
 import styles from './LessonForm.module.css'
 
 export interface LessonFormHandle {
@@ -14,11 +14,20 @@ interface Props {
   isSubmitting?: boolean
 }
 
+const DEFAULT_GRADE_LEVELS: GradeLevel[] = [
+  { label: 'Grade 1', age: 6 }, { label: 'Grade 2', age: 7 },
+  { label: 'Grade 3', age: 8 }, { label: 'Grade 4', age: 9 },
+  { label: 'Grade 5', age: 10 }, { label: 'Grade 6', age: 11 },
+]
+
 const DEFAULT_META: MetaResponse = {
   countries: ['Cameroon', 'Ghana', 'Kenya', 'Nigeria', 'Senegal'],
   languages: ['English', 'French', 'Swahili'],
-  audiences: ['general', 'kid', 'adult'],
-  aspect_ratios: ['1:1', '16:9', '4:3'],
+  grade_levels: {
+    Cameroon: DEFAULT_GRADE_LEVELS, Ghana: DEFAULT_GRADE_LEVELS,
+    Kenya: DEFAULT_GRADE_LEVELS, Nigeria: DEFAULT_GRADE_LEVELS,
+    Senegal: DEFAULT_GRADE_LEVELS,
+  },
 }
 
 export const LessonForm = forwardRef<LessonFormHandle, Props>(function LessonForm(
@@ -28,12 +37,12 @@ export const LessonForm = forwardRef<LessonFormHandle, Props>(function LessonFor
   const [meta, setMeta] = useState<MetaResponse>(DEFAULT_META)
   const [topic, setTopic] = useState('')
   const [country, setCountry] = useState('Kenya')
-  const [grade, setGrade] = useState(5)
+  const [grade, setGrade] = useState('Grade 5')
   const [language, setLanguage] = useState('English')
-  const [audience, setAudience] = useState<'kid' | 'adult' | 'general'>('general')
-  const [aspectRatio, setAspectRatio] = useState('1:1')
   const [extraNotes, setExtraNotes] = useState('')
   const [error, setError] = useState('')
+
+  const gradeLevels: GradeLevel[] = meta.grade_levels[country] ?? DEFAULT_GRADE_LEVELS
 
   useImperativeHandle(ref, () => ({
     getRequest: () => {
@@ -47,24 +56,22 @@ export const LessonForm = forwardRef<LessonFormHandle, Props>(function LessonFor
         country,
         grade,
         language,
-        audience,
-        aspect_ratio: aspectRatio,
         ...(notes ? { extra_context: { notes } } : {}),
       }
     },
-  }), [
-    topic,
-    country,
-    grade,
-    language,
-    audience,
-    aspectRatio,
-    extraNotes,
-  ])
+  }), [topic, country, grade, language, extraNotes])
 
   useEffect(() => {
     api.getMeta().then(setMeta).catch(() => {/* defaults */})
   }, [])
+
+  // Reset grade to first available level when country changes
+  useEffect(() => {
+    const levels = meta.grade_levels[country]
+    if (levels && levels.length > 0) {
+      setGrade(levels[0].label)
+    }
+  }, [country, meta.grade_levels])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -79,8 +86,6 @@ export const LessonForm = forwardRef<LessonFormHandle, Props>(function LessonFor
       country,
       grade,
       language,
-      audience,
-      aspect_ratio: aspectRatio,
       ...(notes ? { extra_context: { notes } } : {}),
     })
   }
@@ -130,16 +135,17 @@ export const LessonForm = forwardRef<LessonFormHandle, Props>(function LessonFor
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="grade">Grade</label>
-          <input
+          <select
             id="grade"
-            className={styles.input}
-            type="number"
-            min={1}
-            max={12}
+            className={styles.select}
             value={grade}
-            onChange={e => setGrade(Number(e.target.value))}
+            onChange={e => setGrade(e.target.value)}
             disabled={busy}
-          />
+          >
+            {gradeLevels.map(g => (
+              <option key={g.label} value={g.label}>{g.label}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -158,35 +164,6 @@ export const LessonForm = forwardRef<LessonFormHandle, Props>(function LessonFor
               <option key={l} value={l}>{l}</option>
             ))}
           </select>
-        </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="audience">Audience</label>
-          <select
-            id="audience"
-            className={styles.select}
-            value={audience}
-            onChange={e => setAudience(e.target.value as 'kid' | 'adult' | 'general')}
-            disabled={busy}
-          >
-            {meta.audiences.map(a => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-        </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="ratio">Aspect ratio</label>
-          <select
-            id="ratio"
-            className={styles.select}
-            value={aspectRatio}
-            onChange={e => setAspectRatio(e.target.value)}
-            disabled={busy}
-          >
-            {meta.aspect_ratios.map(r => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-          <p className={styles.helper}>Shape of generated panel images.</p>
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import './styles/tokens.css'
 import ReactMarkdown from 'react-markdown'
 import { LessonForm, type LessonFormHandle } from './components/LessonForm/LessonForm'
 import { OutputActionBar } from './components/OutputActionBar/OutputActionBar'
-import { PanelCard } from './components/PanelCard/PanelCard'
+import { PanelCarousel } from './components/PanelCarousel/PanelCarousel'
 import { PipelineStepper } from './components/PipelineStepper/PipelineStepper'
 import { TeacherFeedback } from './components/TeacherFeedback/TeacherFeedback'
 import { useLessonJob } from './hooks/useLessonJob'
@@ -46,6 +46,18 @@ export default function App() {
             <h1 className={styles.logo}>Anansi</h1>
             <p className={styles.tagline}>Teaching assistant</p>
           </div>
+          {status === 'done' && result && jobId && (
+            <OutputActionBar
+              jobId={jobId}
+              topic={result.lesson_title}
+              country={lastRequest?.country}
+              grade={lastRequest?.grade}
+              panels={result.panels}
+              running={running}
+              onRegenerate={handleRegenerate}
+              onClear={handleClear}
+            />
+          )}
         </div>
       </header>
 
@@ -90,49 +102,22 @@ export default function App() {
 
             {status === 'done' && result && jobId && (
               <>
-                <OutputActionBar
-                  jobId={jobId}
-                  topic={result.lesson_title}
-                  country={lastRequest?.country}
-                  grade={lastRequest?.grade}
-                    panels={result.panels}
-                    running={running}
-                  onRegenerate={handleRegenerate}
-                  onClear={handleClear}
-                />
-
                 <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>Storyboard</h2>
-                  {result.storyboard_image_url ? (
-                    <img
-                      className={styles.storyboard}
-                      src={result.storyboard_image_url}
-                      alt="Lesson storyboard"
-                    />
-                  ) : (
-                    <p className={styles.muted}>Storyboard image not available.</p>
-                  )}
+                  <PanelCarousel panels={result.panels} />
                 </section>
 
-                <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>Panels</h2>
-                  <div className={styles.panelGrid}>
-                    {result.panels.map(panel => (
-                      <PanelCard key={panel.panel_id} panel={panel} />
-                    ))}
-                  </div>
-                </section>
+                <div className={styles.bottomGroup}>
+                  {result.teacher_guide ? (
+                    <details className={styles.guide}>
+                      <summary className={styles.guideSummary}>Teacher guide</summary>
+                      <div className={styles.guideText}>
+                        <ReactMarkdown>{result.teacher_guide}</ReactMarkdown>
+                      </div>
+                    </details>
+                  ) : null}
 
-                {result.teacher_guide ? (
-                  <details className={styles.guide}>
-                    <summary className={styles.guideSummary}>Teacher guide</summary>
-                    <div className={styles.guideText}>
-                      <ReactMarkdown>{result.teacher_guide}</ReactMarkdown>
-                    </div>
-                  </details>
-                ) : null}
-
-                <TeacherFeedback jobId={jobId} />
+                  <TeacherFeedback jobId={jobId} />
+                </div>
               </>
             )}
 

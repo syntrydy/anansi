@@ -1,20 +1,29 @@
 .wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-sm);
+  padding: var(--space-3) var(--space-4);
 }
 
-.heading {
+.summary {
   font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 1rem;
-  margin: 0;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
   color: var(--color-text);
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
 }
 
 .caption {

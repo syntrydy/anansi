@@ -3,10 +3,8 @@
 export interface LessonRequest {
   topic: string
   country: string
-  grade: number
+  grade: string
   language: string
-  audience: 'kid' | 'adult' | 'general'
-  aspect_ratio: string
   extra_context?: Record<string, unknown>
 }
 
@@ -61,11 +59,15 @@ export interface JobStatusResponse {
   error: string | null
 }
 
+export interface GradeLevel {
+  label: string
+  age: number
+}
+
 export interface MetaResponse {
   countries: string[]
   languages: string[]
-  audiences: string[]
-  aspect_ratios: string[]
+  grade_levels: Record<string, GradeLevel[]>
 }
 
 export type JobStatus = 'idle' | 'running' | 'done' | 'error'

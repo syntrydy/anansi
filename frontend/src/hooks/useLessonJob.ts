@@ -21,13 +21,16 @@ export function useLessonJob(): UseLessonJobResult {
   const [error, setError] = useState<string | null>(null)
   const [lastRequest, setLastRequest] = useState<LessonRequest | null>(null)
 
-  const { snapshots, close } = usePipelineStream(status === 'running' ? jobId : null)
+  const { snapshots, close, onDoneRef } = usePipelineStream(status === 'running' ? jobId : null)
 
-  // Poll for final result once SSE closes
-  async function pollUntilDone(id: string) {
-    const maxAttempts = 60
+  // Poll for final result — SSE done event triggers this immediately,
+  // or it falls back to polling every second for up to 5 minutes.
+  async function pollUntilDone(id: string, signal: AbortSignal) {
+    const maxAttempts = 300
     for (let i = 0; i < maxAttempts; i++) {
+      if (signal.aborted) return
       await new Promise(r => setTimeout(r, 1000))
+      if (signal.aborted) return
       try {
         const job = await api.getLesson(id)
         if (job.status === 'done' && job.result) {
@@ -55,11 +58,27 @@ export function useLessonJob(): UseLessonJobResult {
     setResult(null)
     setError(null)
     setJobId(null)
+    const abortCtrl = new AbortController()
     try {
       const { job_id } = await api.createLesson(req)
       setJobId(job_id)
-      // SSE hook will connect automatically; poll as fallback when it closes
-      await pollUntilDone(job_id)
+      // When SSE fires 'done', immediately do a final fetch instead of waiting for the next poll tick
+      onDoneRef.current = async () => {
+        abortCtrl.abort()
+        try {
+          const job = await api.getLesson(job_id)
+          if (job.status === 'done' && job.result) {
+            setResult(job.result)
+            setStatus('done')
+          } else if (job.status === 'error') {
+            setError(job.error ?? 'Pipeline failed')
+            setStatus('error')
+          }
+        } catch {
+          // ignore; polling loop already handles this
+        }
+      }
+      await pollUntilDone(job_id, abortCtrl.signal)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
       setStatus('error')

@@ -1,19 +1,14 @@
-from typing import Any, Dict, Literal
+from typing import Any, Dict
 
 from pydantic import BaseModel, field_validator
 
 from anansi.core.constants import SUPPORTED_COUNTRIES
 
-Audience = Literal["kid", "adult", "general"]
-
-
 class TeacherInput(BaseModel):
     topic: str
     country: str
-    grade: int
+    grade: str
     language: str
-    audience: Audience = "general"
-    aspect_ratio: str = "1:1"
     extra_context: Dict[str, Any] = {}
 
     @field_validator("country")

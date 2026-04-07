@@ -28,6 +28,7 @@ async def generate_image(
     reference_image_url: str | None = None,
     style: str = "cartoon",
     aspect_ratio: str = "1:1",
+    seed: int | None = None,
 ) -> str:
     """
     Generate a cartoon-style image via Replicate (FLUX Schnell).
@@ -38,9 +39,8 @@ async def generate_image(
         raise RuntimeError("REPLICATE_API_TOKEN is not set")
 
     styled_prompt = (
-        f"Educational comic strip, multiple illustration panels in a grid, "
-        f"bright colors, flat cartoon style, African characters, children's book aesthetic, "
-        f"no text, no words, no letters, no captions inside the image. {prompt}"
+        f"Children's educational cartoon illustration, bright warm colors, "
+        f"flat cartoon style, no text, no words, no letters, no labels inside image. {prompt}"
     )
 
     input_payload: dict[str, Any] = {
@@ -50,6 +50,8 @@ async def generate_image(
         "output_format": "webp",
         "output_quality": 85,
     }
+    if seed is not None:
+        input_payload["seed"] = seed
 
     client = replicate.Client(api_token=token)
     output = await client.async_run(_MODEL, input=input_payload)

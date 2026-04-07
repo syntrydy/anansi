@@ -1,3 +1,4 @@
+import hashlib
 from collections.abc import Callable
 from typing import Any, cast
 
@@ -71,6 +72,14 @@ async def node_cartoon(state: AnansiState) -> dict[str, Any]:
                 if not r.get("safe", True)
             }
             audience = state.get("audience", "general")
+            context_pack = state.get("context_pack") or {}
+
+            seed: int | None = None
+            topic = state.get("topic", "")
+            country_val = state.get("country", "")
+            if topic or country_val:
+                seed = int(hashlib.md5((topic + "|" + country_val).encode()).hexdigest(), 16) & 0x7FFFFFFF
+
             images = await generate_cartoon_panels(
                 scripts,
                 country=state["country"],
@@ -78,6 +87,8 @@ async def node_cartoon(state: AnansiState) -> dict[str, Any]:
                 language=state["language"],
                 aspect_ratio=state.get("aspect_ratio", "1:1"),
                 skip_panel_numbers=unsafe_pns,
+                context_pack=context_pack,
+                seed=seed,
             )
             return {"images": [img.model_dump() for img in images]}
     finally:
