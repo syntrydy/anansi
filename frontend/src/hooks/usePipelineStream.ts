@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react'
 import type { PipelineSnapshot } from '../api/types'
 
 interface UsePipelineStreamResult {
   snapshots: PipelineSnapshot[]
   connected: boolean
   close: () => void
+  onDoneRef: MutableRefObject<(() => void) | null>
 }
 
 export function usePipelineStream(jobId: string | null): UsePipelineStreamResult {
@@ -13,6 +14,7 @@ export function usePipelineStream(jobId: string | null): UsePipelineStreamResult
   const esRef = useRef<EventSource | null>(null)
   const retryRef = useRef(0)
   const maxRetries = 5
+  const onDoneRef = useRef<(() => void) | null>(null)
 
   const close = useCallback(() => {
     esRef.current?.close()
@@ -43,6 +45,7 @@ export function usePipelineStream(jobId: string | null): UsePipelineStreamResult
 
       es.addEventListener('done', () => {
         close()
+        onDoneRef.current?.()
       })
 
       es.addEventListener('error', () => {
@@ -60,5 +63,5 @@ export function usePipelineStream(jobId: string | null): UsePipelineStreamResult
     return close
   }, [jobId, close])
 
-  return { snapshots, connected, close }
+  return { snapshots, connected, close, onDoneRef }
 }

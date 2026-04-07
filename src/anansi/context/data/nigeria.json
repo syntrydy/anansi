@@ -35,6 +35,22 @@
     "animals": ["elephant", "hippopotamus", "crocodile", "African grey parrot", "pangolin", "red river hog"]
   },
   "art_style_cues": "West African urban and rural mix, red clay soil in north, lush green forest in south, colourful ankara fabric, corrugated-zinc rooftops, dense tropical vegetation, vibrant market scenes",
+  "grade_levels": [
+    {"label": "Nursery 1",  "age": 3},
+    {"label": "Nursery 2",  "age": 4},
+    {"label": "Primary 1",  "age": 6},
+    {"label": "Primary 2",  "age": 7},
+    {"label": "Primary 3",  "age": 8},
+    {"label": "Primary 4",  "age": 9},
+    {"label": "Primary 5",  "age": 10},
+    {"label": "Primary 6",  "age": 11},
+    {"label": "JSS 1",      "age": 12},
+    {"label": "JSS 2",      "age": 13},
+    {"label": "JSS 3",      "age": 14},
+    {"label": "SSS 1",      "age": 15},
+    {"label": "SSS 2",      "age": 16},
+    {"label": "SSS 3",      "age": 17}
+  ],
   "avoids": [
     "snow",
     "oak trees",

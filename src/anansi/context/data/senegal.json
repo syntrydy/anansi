@@ -35,6 +35,21 @@
     "animals": ["warthog", "hyena", "pelican", "sea turtle", "African manatee", "Nile monitor", "green monkey"]
   },
   "art_style_cues": "Sahelian landscape, golden sandy soil, iconic baobab trees with thick trunks, colourful painted buses, Atlantic coastline with fishing pirogues, vibrant boubou fabrics in blue and yellow",
+  "grade_levels": [
+    {"label": "CI",          "age": 6},
+    {"label": "CP",          "age": 7},
+    {"label": "CE1",         "age": 8},
+    {"label": "CE2",         "age": 9},
+    {"label": "CM1",         "age": 10},
+    {"label": "CM2",         "age": 11},
+    {"label": "6ème",        "age": 12},
+    {"label": "5ème",        "age": 13},
+    {"label": "4ème",        "age": 14},
+    {"label": "3ème",        "age": 15},
+    {"label": "2nde",        "age": 16},
+    {"label": "1ère",        "age": 17},
+    {"label": "Terminale",   "age": 18}
+  ],
   "avoids": [
     "snow",
     "oak trees",

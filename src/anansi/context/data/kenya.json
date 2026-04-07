@@ -35,6 +35,23 @@
     "animals": ["zebra", "giraffe", "elephant", "lion", "flamingo", "impala", "zebu cattle"]
   },
   "art_style_cues": "East African savanna setting, red laterite soil, acacia trees, blue sky with cumulus clouds, distant escarpment ridge, colourful kanga fabric patterns",
+  "grade_levels": [
+    {"label": "PP1",     "age": 4},
+    {"label": "PP2",     "age": 5},
+    {"label": "Grade 1", "age": 6},
+    {"label": "Grade 2", "age": 7},
+    {"label": "Grade 3", "age": 8},
+    {"label": "Grade 4", "age": 9},
+    {"label": "Grade 5", "age": 10},
+    {"label": "Grade 6", "age": 11},
+    {"label": "Grade 7", "age": 12},
+    {"label": "Grade 8", "age": 13},
+    {"label": "Grade 9", "age": 14},
+    {"label": "Form 1",  "age": 15},
+    {"label": "Form 2",  "age": 16},
+    {"label": "Form 3",  "age": 17},
+    {"label": "Form 4",  "age": 18}
+  ],
   "avoids": [
     "snow",
     "oak trees",

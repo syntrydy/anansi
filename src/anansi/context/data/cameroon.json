@@ -35,6 +35,21 @@
     "animals": ["western lowland gorilla", "forest elephant", "mandrill", "chimpanzee", "African grey parrot", "pangolin"]
   },
   "art_style_cues": "Central African equatorial forest, misty volcanic highlands of the West Region, Atlantic coastline near Douala, vibrant toghu fabric in black and multicolour embroidery, red laterite mountain roads, dense green rainforest canopy",
+  "grade_levels": [
+    {"label": "SIL",         "age": 6},
+    {"label": "CP",          "age": 7},
+    {"label": "CE1",         "age": 8},
+    {"label": "CE2",         "age": 9},
+    {"label": "CM1",         "age": 10},
+    {"label": "CM2",         "age": 11},
+    {"label": "Form 1",      "age": 12},
+    {"label": "Form 2",      "age": 13},
+    {"label": "Form 3",      "age": 14},
+    {"label": "Form 4",      "age": 15},
+    {"label": "Form 5",      "age": 16},
+    {"label": "Lower Sixth", "age": 17},
+    {"label": "Upper Sixth", "age": 18}
+  ],
   "avoids": [
     "snow in lowland areas",
     "oak trees",

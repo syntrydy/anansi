@@ -33,7 +33,7 @@ class _SceneSchema(BaseModel):
 
 class _StoryboardSchema(BaseModel):
     title: str = Field(description="Lesson title")
-    scenes: list[_SceneSchema] = Field(description="4-6 sequential visual scenes")
+    scenes: list[_SceneSchema] = Field(description="exactly 6 sequential visual scenes")
     total_panels: int = Field(description="Must equal len(scenes)")
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 _SYSTEM_PROMPT = """\
 You are an expert curriculum designer specialising in visual storytelling for
 African K-12 classrooms. Given a teaching topic, grade level, and language,
-decompose the subject into 4-6 sequential visual panels that build progressively.
+decompose the subject into exactly 6 sequential visual panels that build progressively.
 
 Rules:
 - Each panel must be describable as a single still image — visual-first.
@@ -56,7 +56,7 @@ Rules:
 - setting is a brief phrase like "village market at midday" or "river bank at sunrise".
 - The final panel should summarise or test understanding.
 - scene_id must be the string representation of the panel number (e.g. "1", "2").
-- total_panels must equal len(scenes).
+- total_panels must equal len(scenes) and must be 6.
 """
 
 
@@ -68,7 +68,7 @@ def _user_prompt(state: AnansiState) -> str:
         f"Grade: {state['grade']}\n"
         f"Language: {state['language']}\n"
         f"Country: {state['country']}{extra_str}\n\n"
-        "Produce a StoryboardOutput with 4-6 scenes."
+        "Produce a StoryboardOutput with exactly 6 scenes."
     )
 
 

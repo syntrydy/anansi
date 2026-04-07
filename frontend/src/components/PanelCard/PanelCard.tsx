@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function PanelCard({ panel }: Props) {
-  const [caption, setCaption] = useState(panel.caption)
+  const caption = panel.caption
   const [dialogue, setDialogue] = useState(panel.dialogue)
   const unsafe = !panel.safe
 
@@ -44,16 +44,8 @@ export function PanelCard({ panel }: Props) {
         </div>
 
         <div className={styles.fields}>
-          <label className={styles.fieldLabel} htmlFor={`cap-${panel.panel_id}`}>Caption</label>
-          <textarea
-            id={`cap-${panel.panel_id}`}
-            className={styles.inlineInput}
-            value={caption}
-            onChange={e => setCaption(e.target.value)}
-            rows={2}
-            readOnly={unsafe}
-            aria-readonly={unsafe}
-          />
+          <span className={styles.fieldLabel}>Caption</span>
+          <p className={styles.fieldText}>{caption}</p>
 
           <label className={styles.fieldLabel} htmlFor={`dlg-${panel.panel_id}`}>Dialogue</label>
           <textarea
@@ -68,7 +60,7 @@ export function PanelCard({ panel }: Props) {
 
           {panel.narration ? (
             <>
-              <label className={styles.fieldLabel}>Narration</label>
+              <span className={styles.fieldLabel}>Narration</span>
               <p className={styles.narration}>{panel.narration}</p>
             </>
           ) : null}

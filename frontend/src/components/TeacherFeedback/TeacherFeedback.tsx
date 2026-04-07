@@ -26,35 +26,38 @@ export function TeacherFeedback({ jobId }: Props) {
   }
 
   return (
-    <div className={styles.wrapper}>
-      <h3 className={styles.heading}>Teacher Feedback</h3>
-      <p className={styles.caption}>Was this lesson package useful? Your feedback helps improve future lessons.</p>
+    <details className={styles.wrapper}>
+      <summary className={styles.summary}>Teacher Feedback</summary>
 
-      <textarea
-        className={styles.textarea}
-        placeholder="Optional comment (e.g. what worked, what did not)…"
-        value={comment}
-        onChange={e => setComment(e.target.value)}
-        rows={3}
-        disabled={loading}
-      />
+      <div className={styles.body}>
+        <p className={styles.caption}>Was this lesson package useful? Your feedback helps improve future lessons.</p>
 
-      <div className={styles.buttons}>
-        <button
-          className={styles.thumbUp}
-          onClick={() => send('positive')}
+        <textarea
+          className={styles.textarea}
+          placeholder="Optional comment (e.g. what worked, what did not)…"
+          value={comment}
+          onChange={e => setComment(e.target.value)}
+          rows={3}
           disabled={loading}
-        >
-          👍 Useful
-        </button>
-        <button
-          className={styles.thumbDown}
-          onClick={() => send('negative')}
-          disabled={loading}
-        >
-          👎 Not useful
-        </button>
+        />
+
+        <div className={styles.buttons}>
+          <button
+            className={styles.thumbUp}
+            onClick={() => send('positive')}
+            disabled={loading}
+          >
+            👍 Useful
+          </button>
+          <button
+            className={styles.thumbDown}
+            onClick={() => send('negative')}
+            disabled={loading}
+          >
+            👎 Not useful
+          </button>
+        </div>
       </div>
-    </div>
+    </details>
   )
 }
