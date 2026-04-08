@@ -1,5 +1,5 @@
 """
-LLM infrastructure — Anthropic (cloud) or Ollama (local) chat models.
+LLM infrastructure — Anthropic (cloud), Cerebras (fallback), or Ollama (local) chat models.
 """
 
 from __future__ import annotations
@@ -60,4 +60,30 @@ def get_llm(capability: str = "standard") -> Any | None:
         )  # type: ignore[call-arg]
     except Exception as exc:
         logger.warning("Anthropic LLM unavailable: %s", exc)
+        return None
+
+
+def get_cerebras_llm(capability: str = "standard") -> Any | None:
+    """
+    Return a Cerebras LangChain chat model, or ``None`` if not configured.
+
+    Used as a fallback when the primary Anthropic LLM is overloaded (HTTP 529).
+    """
+    settings = get_settings()
+    if not settings.cerebras_api_key:
+        return None
+
+    try:
+        from langchain_cerebras import ChatCerebras  # type: ignore[import]
+
+        use_reasoning = capability == "reasoning"
+        model_name = (
+            settings.cerebras_model_reasoning if use_reasoning else settings.cerebras_model
+        )
+        return ChatCerebras(
+            model=model_name,
+            api_key=settings.cerebras_api_key,
+        )
+    except Exception as exc:
+        logger.warning("Cerebras LLM unavailable: %s", exc)
         return None

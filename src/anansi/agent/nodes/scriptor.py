@@ -17,7 +17,7 @@ from anansi.core.models.context import CountryData
 from anansi.core.models.script import PanelScript
 from anansi.core.models.state import AnansiState
 from anansi.core.models.storyboard import Scene
-from anansi.infrastructure.llm import get_llm
+from anansi.infrastructure.llm import get_cerebras_llm, get_llm
 
 
 # ---------------------------------------------------------------------------
@@ -206,5 +206,36 @@ async def write_script(
         return panels
 
     except Exception as exc:
-        logger.warning("N3: LLM call failed (%s) — falling back to template", exc)
+        if "529" in str(exc) or "overloaded" in str(exc).lower():
+            logger.warning("N3: Anthropic overloaded (%s) — retrying with Cerebras", exc)
+            cerebras_llm = get_cerebras_llm(capability="standard")
+            if cerebras_llm is not None:
+                try:
+                    from langchain_core.messages import HumanMessage, SystemMessage
+
+                    structured_llm = cerebras_llm.with_structured_output(_ScriptOutputSchema)
+                    messages = [
+                        SystemMessage(content=_format_system(state, context)),
+                        HumanMessage(content=_build_user_prompt(state, scenes, context)),
+                    ]
+                    result: _ScriptOutputSchema = await structured_llm.ainvoke(messages)  # type: ignore[assignment]
+                    panels: list[PanelScript] = []
+                    for i, p in enumerate(result.panels):
+                        panel_id = scenes[i].scene_id if i < len(scenes) else str(i + 1)
+                        panels.append(
+                            PanelScript(
+                                panel_number=p.panel_number,
+                                panel_id=panel_id,
+                                caption=p.caption,
+                                dialogue=p.dialogue,
+                                prompt=p.prompt,
+                                narration=p.narration,
+                            )
+                        )
+                    logger.info("N3: Cerebras generated %s panel scripts", len(panels))
+                    return panels
+                except Exception as cerebras_exc:
+                    logger.warning("N3: Cerebras fallback failed (%s) — falling back to template", cerebras_exc)
+        else:
+            logger.warning("N3: LLM call failed (%s) — falling back to template", exc)
         return _fallback_scripts(state, scenes, context)

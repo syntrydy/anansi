@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     )
 
     anthropic_api_key: str = Field(default="", validation_alias="ANTHROPIC_API_KEY")
+    cerebras_api_key: str = Field(default="", validation_alias="CEREBRAS_API_KEY")
+    cerebras_model: str = Field(default="llama3.1-8b", validation_alias="CEREBRAS_MODEL")
+    cerebras_model_reasoning: str = Field(
+        default="llama3.1-8b", validation_alias="CEREBRAS_MODEL_REASONING"
+    )
     openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
     replicate_api_token: str = Field(default="", validation_alias="REPLICATE_API_TOKEN")
     anthropic_model: str = Field(

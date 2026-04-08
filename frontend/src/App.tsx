@@ -5,6 +5,7 @@ import { LessonForm, type LessonFormHandle } from './components/LessonForm/Lesso
 import { OutputActionBar } from './components/OutputActionBar/OutputActionBar'
 import { PanelCarousel } from './components/PanelCarousel/PanelCarousel'
 import { PipelineStepper } from './components/PipelineStepper/PipelineStepper'
+import { ShowcasePage } from './components/ShowcasePage/ShowcasePage'
 import { TeacherFeedback } from './components/TeacherFeedback/TeacherFeedback'
 import { useLessonJob } from './hooks/useLessonJob'
 import styles from './App.module.css'
@@ -22,6 +23,7 @@ export default function App() {
   } = useLessonJob()
 
   const [formKey, setFormKey] = useState(0)
+  const [showShowcase, setShowShowcase] = useState(false)
   const formRef = useRef<LessonFormHandle>(null)
 
   function handleClear() {
@@ -38,6 +40,29 @@ export default function App() {
 
   const running = status === 'running'
 
+  if (showShowcase) {
+    return (
+      <div className={styles.app}>
+        <header className={styles.header}>
+          <div className={styles.headerInner}>
+            <div>
+              <h1 className={styles.logo}>Anansi</h1>
+              <p className={styles.tagline}>Teaching assistant</p>
+            </div>
+            <button
+              type="button"
+              className={styles.navBtn}
+              onClick={() => setShowShowcase(false)}
+            >
+              ← Back to app
+            </button>
+          </div>
+        </header>
+        <ShowcasePage />
+      </div>
+    )
+  }
+
   return (
     <div className={styles.app}>
       <header className={styles.header}>
@@ -46,6 +71,15 @@ export default function App() {
             <h1 className={styles.logo}>Anansi</h1>
             <p className={styles.tagline}>Teaching assistant</p>
           </div>
+          <div className={styles.headerRight}>
+            <button
+              type="button"
+              className={styles.navBtn}
+              onClick={() => setShowShowcase(true)}
+              title="About this project"
+            >
+              About
+            </button>
           {status === 'done' && result && jobId && (
             <OutputActionBar
               jobId={jobId}
@@ -58,6 +92,7 @@ export default function App() {
               onClear={handleClear}
             />
           )}
+          </div>
         </div>
       </header>
 

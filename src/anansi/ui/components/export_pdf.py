@@ -891,6 +891,7 @@ class _TeachingComicPDF(FPDF):  # type: ignore[misc]
 
 
 def _build_filename(topic: str, country: str, grade: str | int) -> str:
+    from datetime import date
     parts: list[str] = []
     if topic:
         slug = topic.strip().lower().replace(" ", "_")
@@ -900,6 +901,7 @@ def _build_filename(topic: str, country: str, grade: str | int) -> str:
         parts.append(country.strip().lower().replace(" ", "_"))
     if grade:
         parts.append(f"grade{grade}")
+    parts.append(date.today().strftime("%Y%m%d"))
     return ("_".join(parts) or "lesson_comic") + ".pdf"
 
 
