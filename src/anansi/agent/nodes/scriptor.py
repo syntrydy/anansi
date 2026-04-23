@@ -47,10 +47,13 @@ produce panel scripts.
 
 For EACH panel output exactly:
 - caption: max 20 words, child-friendly, in {language}. Summarises what happens.
+  Always mention at least one local element from the context pack — a character
+  name, food, place, or animal — so the caption feels grounded in that country.
 - dialogue: a single string with character names and spoken lines formatted as
   "CharacterName: spoken line.  OtherCharacter: response."
-  Replace placeholder names like [CHILD_NAME_1] with culturally accurate names
-  from the context pack names list.  Keep lines short and age-appropriate.
+  Replace ALL placeholder names like [CHILD_NAME_1] with culturally accurate names
+  from the context pack names list. Reference a local place, food, or practice
+  naturally in the conversation. Keep lines short and age-appropriate.
 - prompt: a detailed FLUX.1 image generation prompt.
   * Include explicit cultural visual cues from the art style and cultural elements.
   * Replace placeholder names/places with names from the context pack.
@@ -60,12 +63,16 @@ For EACH panel output exactly:
   * For panels 2+: begin with "Continuing the same characters. Scene: ..."
   * End every prompt with exactly: "Do not show: {avoids_list}"
 - narration: 1-3 calm teacher narration sentences for text-to-speech delivery.
-  Written in {language}. Should explain the key concept clearly for the grade level.
+  Written in {language}. Explain the key concept clearly for grade {grade}.
+  Ground the explanation in a concrete local example from the context pack —
+  a food, animal, place, or everyday practice the learners will recognise.
+  Do NOT use generic examples; always tie the concept to something from that country.
 
 full_narration is all narration texts joined with two newlines.
 
-Cultural accuracy is critical: use names, places, foods, and clothing from the
-context pack. Grade level is {grade} — adjust vocabulary accordingly.
+Cultural accuracy is non-negotiable: every panel's text must feel like it was
+written for a child in that specific country. Grade level is {grade} — adjust
+vocabulary accordingly.
 """
 
 
@@ -119,7 +126,10 @@ def _build_user_prompt(
     return (
         f"Storyboard scenes (JSON):\n{scenes_json}\n\n"
         f"Cultural context:\n{context_summary}\n\n"
-        "Produce a ScriptOutput with exactly one PanelScript per scene above."
+        "Produce a ScriptOutput with exactly one PanelScript per scene above.\n"
+        "Every caption, dialogue line, and narration sentence MUST reference at least "
+        "one element from the cultural context above (a name, place, food, animal, or "
+        "clothing item). Generic or western-centric text is not acceptable."
     )
 
 

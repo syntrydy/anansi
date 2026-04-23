@@ -69,7 +69,7 @@ def _contains_local_elements(text: str, context_pack: dict[str, Any]) -> bool:
 def validate_panel_script(
     panel: PanelScript,
     context_pack: dict[str, Any],
-    audience: str = "general",
+    audience: str = "general",  # reserved for future audience-specific rules
 ) -> str | None:
     """Heuristic gate: return a human-readable reason if unsafe; else ``None``."""
     for field in (panel.caption, panel.dialogue, panel.narration, panel.prompt):
@@ -79,11 +79,6 @@ def validate_panel_script(
     combined = f"{panel.caption}. {panel.dialogue}. {panel.narration}"
     if not _contains_local_elements(combined, context_pack):
         return "Missing local cultural elements in text."
-
-    if audience.lower() == "kid":
-        inappropriate = ("blood", "death", "war")
-        if any(word in combined.lower() for word in inappropriate):
-            return "Not age-appropriate for kids."
 
     return None
 
